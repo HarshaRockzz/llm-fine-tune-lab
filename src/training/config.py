@@ -1,7 +1,6 @@
 """Training configuration using Pydantic v2 dataclasses."""
 from __future__ import annotations
 
-from dataclasses import field
 from pathlib import Path
 from typing import Literal, Optional
 

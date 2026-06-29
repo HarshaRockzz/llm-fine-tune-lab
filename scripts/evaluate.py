@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """CLI for running the evaluation harness on a checkpoint or vLLM endpoint."""
 import argparse
-import json
 import logging
 import sys
 from pathlib import Path

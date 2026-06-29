@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
-from src.api.schemas import EvalRequest, EvalResponse
+from src.api.schemas import EvalRequest
 from src.evaluation.harness import EvalConfig, EvalHarness
 from src.inference.vllm_engine import VLLMEngine, get_engine
 

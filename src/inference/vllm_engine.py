@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import logging
-import os
-from pathlib import Path
 from typing import AsyncGenerator, Optional
 
 logger = logging.getLogger(__name__)
@@ -40,7 +38,6 @@ class VLLMEngine:
         """Lazy-initialize the vLLM async engine."""
         try:
             from vllm import AsyncLLMEngine, AsyncEngineArgs
-            from vllm.lora.request import LoRARequest
         except ImportError:
             raise RuntimeError(
                 "vLLM is not installed. Run: pip install vllm"

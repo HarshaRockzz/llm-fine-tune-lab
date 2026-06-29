@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, Optional
+from typing import Callable
 
 import numpy as np
 from datasets import load_dataset
@@ -41,7 +41,7 @@ def _mc1_score(model_fn: Callable, question: str, mc1_targets: dict) -> float:
 def _mc2_score(model_fn: Callable, question: str, mc2_targets: dict) -> float:
     """MC2: multiple correct answers — score is fraction of correct labels selected."""
     choices = mc2_targets["choices"]
-    correct_indices = {i for i, l in enumerate(mc2_targets["labels"]) if l == 1}
+    correct_indices = {i for i, label in enumerate(mc2_targets["labels"]) if label == 1}
     labels = "ABCDEFGHIJ"
 
     prompt = _format_mc_prompt(question, choices, "mc2")

@@ -1,7 +1,6 @@
 """Model Playground — streaming chat + side-by-side A/B comparison via OpenRouter."""
 import os
 import time
-from pathlib import Path
 
 import httpx
 import streamlit as st

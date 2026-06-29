@@ -48,7 +48,7 @@ def main():
     if args.output_dir:
         config.output_dir = args.output_dir
 
-    logger.info(f"Config summary:")
+    logger.info("Config summary:")
     logger.info(f"  Model:     {config.model_name_or_path}")
     logger.info(f"  Method:    {'QLoRA 4-bit' if config.use_qlora else 'LoRA BF16'}")
     logger.info(f"  LR:        {config.learning_rate}")

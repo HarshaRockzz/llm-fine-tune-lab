@@ -5,7 +5,7 @@ import time
 import uuid
 from typing import AsyncGenerator
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from src.api.schemas import (

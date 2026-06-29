@@ -3,11 +3,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any
 
 import wandb
 
-from src.training.config import TrainingConfig, PRESETS
+from src.training.config import PRESETS
 
 
 SWEEP_CONFIG_LORA = {
