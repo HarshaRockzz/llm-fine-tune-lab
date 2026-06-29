@@ -1,6 +1,8 @@
 """Experiment Tracker — W&B-style experiment comparison, parallel coordinates, Pareto front."""
 
+# ruff: noqa: E402
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -11,7 +13,20 @@ import streamlit as st
 
 st.set_page_config(page_title="Experiment Tracker", page_icon="🔬", layout="wide")
 
+_APP_DIR = str(Path(__file__).resolve().parent.parent)
+if _APP_DIR not in sys.path:
+    sys.path.insert(0, _APP_DIR)
+from ui_styles import inject_global_css
+
+inject_global_css()
+
 DATA_PATH = Path(__file__).parent.parent.parent / "data"
+
+_CHART_LAYOUT = dict(
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(255,255,255,0.02)",
+    font=dict(family="Inter", color="#94a3b8", size=12),
+)
 
 
 @st.cache_data(ttl=300)
@@ -23,9 +38,13 @@ def load_df() -> pd.DataFrame:
     return pd.DataFrame()
 
 
-st.title("🔬 Experiment Tracker")
-st.caption(
-    "All 20+ W&B sweep runs — compare hyperparameters, metrics, and find Pareto-optimal configs."
+# ── Page header ───────────────────────────────────────────────────────────────
+st.markdown(
+    """
+<div class="page-title">🔬 Experiment Tracker</div>
+<div class="page-caption">All 20+ W&B sweep runs — compare hyperparameters, metrics, and find Pareto-optimal configs.</div>
+""",
+    unsafe_allow_html=True,
 )
 
 df = load_df()
@@ -35,12 +54,19 @@ if df.empty:
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.header("Filter & Sort")
+    st.markdown(
+        "<div style='color:#a5b4fc;font-weight:700;font-size:1rem;margin-bottom:12px;'>⚙️ Filter &amp; Sort</div>",
+        unsafe_allow_html=True,
+    )
     models = st.multiselect(
-        "Model", df["model"].unique().tolist(), default=df["model"].unique().tolist()
+        "Model",
+        df["model"].unique().tolist(),
+        default=df["model"].unique().tolist(),
     )
     methods = st.multiselect(
-        "Method", df["method"].unique().tolist(), default=df["method"].unique().tolist()
+        "Method",
+        df["method"].unique().tolist(),
+        default=df["method"].unique().tolist(),
     )
     sort_by = st.selectbox(
         "Sort by",
@@ -55,7 +81,7 @@ with st.sidebar:
     )
     sort_asc = st.checkbox("Ascending", value=False)
     min_mmlu = st.slider("Min MMLU", 0.5, 0.75, 0.54, 0.01)
-    st.divider()
+    st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
     show_pareto = st.checkbox("Show Pareto front", value=True)
     color_by = st.selectbox(
         "Color scatter by", ["method", "model", "rank", "scheduler"]
@@ -71,7 +97,8 @@ df_f = (
     .reset_index(drop=True)
 )
 
-# ── Row 1: Summary KPIs ───────────────────────────────────────────────────────
+# ── Summary KPIs ──────────────────────────────────────────────────────────────
+st.markdown("<div class='section-hdr'>📊 Summary KPIs</div>", unsafe_allow_html=True)
 k1, k2, k3, k4 = st.columns(4)
 k1.metric("Runs shown", len(df_f), f"of {len(df)}")
 if not df_f.empty:
@@ -82,15 +109,21 @@ if not df_f.empty:
         f"{df_f['mmlu_overall'].mean():.1%}",
         f"σ={df_f['mmlu_overall'].std():.3f}",
     )
-    k4.metric(
-        "GPU savings (QLoRA)",
-        f"{(1 - df_f[df_f.method == 'QLoRA']['gpu_mem_gb'].mean() / df_f[df_f.method == 'LoRA']['gpu_mem_gb'].mean()) * 100:.0f}%",
-    )
+    qlora_gpu = df_f[df_f.method == "QLoRA"]["gpu_mem_gb"].mean()
+    lora_gpu = df_f[df_f.method == "LoRA"]["gpu_mem_gb"].mean()
+    if lora_gpu and qlora_gpu:
+        k4.metric(
+            "GPU savings (QLoRA)",
+            f"{(1 - qlora_gpu / lora_gpu) * 100:.0f}%",
+        )
 
-st.divider()
+st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
 
-# ── Row 2: MMLU vs eval loss scatter ──────────────────────────────────────────
-st.subheader("MMLU Accuracy vs. Eval Loss")
+# ── MMLU vs eval loss scatter ─────────────────────────────────────────────────
+st.markdown(
+    "<div class='section-hdr'>🎯 MMLU Accuracy vs. Eval Loss</div>",
+    unsafe_allow_html=True,
+)
 
 c_scatter, c_violin = st.columns([3, 2])
 
@@ -104,12 +137,11 @@ with c_scatter:
         size="rank",
         hover_data=["run_name", "lr", "rank", "epochs", "neftune"],
         template="plotly_dark",
-        height=420,
+        height=440,
         labels={"eval_loss_final": "Eval Loss", "mmlu_overall": "MMLU Accuracy"},
         title="MMLU Accuracy vs Eval Loss (size=rank)",
     )
 
-    # Pareto front
     if show_pareto and len(df_f) > 2:
         sorted_pareto = df_f.sort_values("eval_loss_final")
         best_mmlu = -np.inf
@@ -126,11 +158,12 @@ with c_scatter:
                     y=pp["mmlu_overall"],
                     mode="lines",
                     name="Pareto Front",
-                    line=dict(color="#f59e0b", width=2, dash="dash"),
+                    line=dict(color="#f59e0b", width=2.5, dash="dash"),
                 )
             )
 
     fig_sc.update_yaxes(tickformat=".0%")
+    fig_sc.update_layout(**_CHART_LAYOUT)
     st.plotly_chart(fig_sc, use_container_width=True)
 
 with c_violin:
@@ -142,18 +175,22 @@ with c_violin:
         box=True,
         points="all",
         template="plotly_dark",
-        height=420,
+        height=440,
         title="MMLU Distribution by Method",
         labels={"mmlu_overall": "MMLU Accuracy"},
         color_discrete_map={"LoRA": "#6366f1", "QLoRA": "#10b981"},
     )
     fig_vio.update_yaxes(tickformat=".0%")
+    fig_vio.update_layout(**_CHART_LAYOUT)
     st.plotly_chart(fig_vio, use_container_width=True)
 
-st.divider()
+st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
 
-# ── Row 3: Parallel coordinates ────────────────────────────────────────────────
-st.subheader("Parallel Coordinates — Hyperparameter Sweep")
+# ── Parallel coordinates ───────────────────────────────────────────────────────
+st.markdown(
+    "<div class='section-hdr'>🔗 Parallel Coordinates — Hyperparameter Sweep</div>",
+    unsafe_allow_html=True,
+)
 
 dims_avail = {
     "Learning Rate": "lr",
@@ -178,14 +215,12 @@ selected_dims = st.multiselect(
 
 if selected_dims and len(df_f) > 0:
     cols = [dims_avail[d] for d in selected_dims]
-    # Deduplicate: if "mmlu_overall" is already in cols (via "MMLU" dim), don't add it again
     all_cols = list(dict.fromkeys(cols + ["mmlu_overall"]))
     pc_df = df_f[all_cols].copy()
 
     dimensions_list = []
     for col, label in zip(cols, selected_dims):
         col_series = pc_df[col]
-        # Guard against duplicate-column DataFrames returning a 2-D slice
         if isinstance(col_series, pd.DataFrame):
             col_series = col_series.iloc[:, 0]
         col_data = pd.to_numeric(col_series, errors="coerce").fillna(0)
@@ -210,15 +245,19 @@ if selected_dims and len(df_f) > 0:
     )
     fig_pc.update_layout(
         template="plotly_dark",
-        height=420,
+        height=440,
         title="Parallel Coordinates (color=MMLU Accuracy)",
+        **_CHART_LAYOUT,
     )
     st.plotly_chart(fig_pc, use_container_width=True)
 
-st.divider()
+st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
 
-# ── Row 4: Correlation heatmap ─────────────────────────────────────────────────
-st.subheader("Hyperparameter × Metric Correlation")
+# ── Correlation heatmap ────────────────────────────────────────────────────────
+st.markdown(
+    "<div class='section-hdr'>🌡️ Hyperparameter × Metric Correlation</div>",
+    unsafe_allow_html=True,
+)
 
 metric_cols = [
     "mmlu_overall",
@@ -253,17 +292,20 @@ fig_corr = go.Figure(
 )
 fig_corr.update_layout(
     template="plotly_dark",
-    height=400,
+    height=420,
     title="Pearson Correlation: Hyperparameters vs. Metrics",
     xaxis_title="Metric",
     yaxis_title="Hyperparameter",
+    **_CHART_LAYOUT,
 )
 st.plotly_chart(fig_corr, use_container_width=True)
 
-st.divider()
+st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
 
-# ── Row 5: Full experiment table ───────────────────────────────────────────────
-st.subheader("Full Experiment Table")
+# ── Full experiment table ─────────────────────────────────────────────────────
+st.markdown(
+    "<div class='section-hdr'>📋 Full Experiment Table</div>", unsafe_allow_html=True
+)
 
 DISPLAY_COLS = {
     "run_name": "Run",
@@ -305,9 +347,8 @@ st.dataframe(
         }
     ),
     use_container_width=True,
-    height=500,
+    height=520,
 )
 
-# Download
 csv = df_f.to_csv(index=False)
 st.download_button("⬇️ Download CSV", csv, "experiments.csv", "text/csv")

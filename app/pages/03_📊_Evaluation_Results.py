@@ -1,6 +1,8 @@
 """Evaluation Results — MMLU, TruthfulQA, LLM-judge, checkpoint progress."""
 
+# ruff: noqa: E402
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -11,7 +13,20 @@ import streamlit as st
 
 st.set_page_config(page_title="Evaluation Results", page_icon="📊", layout="wide")
 
+_APP_DIR = str(Path(__file__).resolve().parent.parent)
+if _APP_DIR not in sys.path:
+    sys.path.insert(0, _APP_DIR)
+from ui_styles import inject_global_css
+
+inject_global_css()
+
 DATA_PATH = Path(__file__).parent.parent.parent / "data"
+
+_CHART_LAYOUT = dict(
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(255,255,255,0.02)",
+    font=dict(family="Inter", color="#94a3b8", size=12),
+)
 
 
 @st.cache_data(ttl=300)
@@ -23,9 +38,13 @@ def load_eval():
     return {}
 
 
-st.title("📊 Evaluation Results")
-st.caption(
-    "MMLU, TruthfulQA, LLM-as-Judge scores — baseline vs. fine-tuned champion model."
+# ── Page header ───────────────────────────────────────────────────────────────
+st.markdown(
+    """
+<div class="page-title">📊 Evaluation Results</div>
+<div class="page-caption">MMLU, TruthfulQA, LLM-as-Judge scores — baseline vs. fine-tuned champion model.</div>
+""",
+    unsafe_allow_html=True,
 )
 
 data = load_eval()
@@ -37,7 +56,9 @@ base = data["baseline"]
 ft = data["fine_tuned"]
 
 # ── Hero metrics ──────────────────────────────────────────────────────────────
-st.subheader("Overall Performance")
+st.markdown(
+    "<div class='section-hdr'>🏆 Overall Performance</div>", unsafe_allow_html=True
+)
 m1, m2, m3, m4, m5 = st.columns(5)
 
 m1.metric(
@@ -66,10 +87,12 @@ m5.metric(
     f"+{(ft['judge_pass_rate'] - base['judge_pass_rate']) * 100:.0f}pp",
 )
 
-st.divider()
+st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
 
-# ── Row 1: MMLU category breakdown ────────────────────────────────────────────
-st.subheader("MMLU Category Breakdown")
+# ── MMLU category breakdown ────────────────────────────────────────────────────
+st.markdown(
+    "<div class='section-hdr'>📚 MMLU Category Breakdown</div>", unsafe_allow_html=True
+)
 
 cat_data = data["mmlu_categories"]
 cats = list(cat_data.keys())
@@ -78,40 +101,59 @@ ft_scores = [cat_data[c]["finetuned"] for c in cats]
 
 fig_mmlu = go.Figure()
 fig_mmlu.add_trace(
-    go.Bar(name="Base Model", x=cats, y=base_scores, marker_color="#475569")
+    go.Bar(
+        name="Base Model",
+        x=cats,
+        y=base_scores,
+        marker_color="#475569",
+        marker_line_color="rgba(71,85,105,0.5)",
+        marker_line_width=1,
+    )
 )
 fig_mmlu.add_trace(
-    go.Bar(name="QLoRA Fine-tuned", x=cats, y=ft_scores, marker_color="#6366f1")
+    go.Bar(
+        name="QLoRA Fine-tuned",
+        x=cats,
+        y=ft_scores,
+        marker_color="#6366f1",
+        marker_line_color="rgba(99,102,241,0.5)",
+        marker_line_width=1,
+    )
 )
 fig_mmlu.update_layout(
     barmode="group",
     template="plotly_dark",
-    height=380,
+    height=420,
     yaxis=dict(title="Accuracy", tickformat=".0%", range=[0, 1]),
     xaxis_title="Category",
     legend=dict(orientation="h", y=1.12),
     title="MMLU Accuracy by Category — Baseline vs. Fine-tuned",
+    **_CHART_LAYOUT,
 )
-# Add improvement annotations
 for i, (cat, bs, fs) in enumerate(zip(cats, base_scores, ft_scores)):
     fig_mmlu.add_annotation(
         x=cat,
         y=fs + 0.02,
         text=f"+{(fs - bs) * 100:.0f}pp",
         showarrow=False,
-        font=dict(size=11, color="#10b981"),
+        font=dict(size=11, color="#10b981", family="Inter"),
     )
 st.plotly_chart(fig_mmlu, use_container_width=True)
 
-st.divider()
+st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
 
-# ── Row 2: Checkpoint progress ────────────────────────────────────────────────
-st.subheader("Accuracy vs. Training Steps")
+# ── Checkpoint progress ────────────────────────────────────────────────────────
+st.markdown(
+    "<div class='section-hdr'>🚀 Accuracy vs. Training Steps</div>",
+    unsafe_allow_html=True,
+)
 
 ckpt = pd.DataFrame(data["checkpoints"])
 
 fig_ckpt = make_subplots(
-    rows=1, cols=2, subplot_titles=("MMLU Accuracy Progress", "Eval Loss Progress")
+    rows=1,
+    cols=2,
+    subplot_titles=("MMLU Accuracy Progress", "Eval Loss Progress"),
 )
 
 fig_ckpt.add_trace(
@@ -121,7 +163,7 @@ fig_ckpt.add_trace(
         name="MMLU",
         line=dict(color="#6366f1", width=2.5),
         mode="lines+markers",
-        marker=dict(size=5),
+        marker=dict(size=6, color="#6366f1", line=dict(color="#a5b4fc", width=1.5)),
     ),
     row=1,
     col=1,
@@ -133,7 +175,7 @@ fig_ckpt.add_trace(
         name="Custom Domain",
         line=dict(color="#10b981", width=2.5),
         mode="lines+markers",
-        marker=dict(size=5),
+        marker=dict(size=6, color="#10b981", line=dict(color="#6ee7b7", width=1.5)),
     ),
     row=1,
     col=1,
@@ -154,7 +196,6 @@ fig_ckpt.add_hline(
     row=1,
     col=1,
 )
-
 fig_ckpt.add_trace(
     go.Scatter(
         x=ckpt["step"],
@@ -162,7 +203,7 @@ fig_ckpt.add_trace(
         name="Eval Loss",
         line=dict(color="#f59e0b", width=2.5),
         mode="lines+markers",
-        marker=dict(size=5),
+        marker=dict(size=6, color="#f59e0b", line=dict(color="#fcd34d", width=1.5)),
         showlegend=True,
     ),
     row=1,
@@ -171,18 +212,22 @@ fig_ckpt.add_trace(
 
 fig_ckpt.update_layout(
     template="plotly_dark",
-    height=380,
-    legend=dict(orientation="h", y=-0.2),
+    height=420,
+    legend=dict(orientation="h", y=-0.22),
+    **_CHART_LAYOUT,
 )
 fig_ckpt.update_yaxes(title_text="Accuracy", tickformat=".0%", row=1, col=1)
 fig_ckpt.update_yaxes(title_text="Loss", row=1, col=2)
 fig_ckpt.update_xaxes(title_text="Training Step")
 st.plotly_chart(fig_ckpt, use_container_width=True)
 
-st.divider()
+st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
 
-# ── Row 3: LLM Judge radar ────────────────────────────────────────────────────
-st.subheader("LLM-as-Judge Dimension Scores")
+# ── LLM Judge radar ────────────────────────────────────────────────────────────
+st.markdown(
+    "<div class='section-hdr'>🎯 LLM-as-Judge Dimension Scores</div>",
+    unsafe_allow_html=True,
+)
 
 judge_dims = data["judge_dimensions"]
 dimensions = list(judge_dims.keys())
@@ -200,7 +245,7 @@ with col_radar:
             fill="toself",
             name="Base Model",
             line_color="#475569",
-            fillcolor="rgba(71,85,105,0.2)",
+            fillcolor="rgba(71,85,105,0.15)",
         )
     )
     fig_radar.add_trace(
@@ -210,15 +255,19 @@ with col_radar:
             fill="toself",
             name="QLoRA Fine-tuned",
             line_color="#6366f1",
-            fillcolor="rgba(99,102,241,0.2)",
+            fillcolor="rgba(99,102,241,0.18)",
         )
     )
     fig_radar.update_layout(
-        polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 10], color="#475569"),
+            bgcolor="rgba(0,0,0,0)",
+        ),
         template="plotly_dark",
-        height=380,
-        title="Judge Dimension Radar (Claude claude-sonnet-4-6 as Judge)",
-        legend=dict(orientation="h", y=-0.1),
+        height=420,
+        title="Judge Dimension Radar (Claude Sonnet as Judge)",
+        legend=dict(orientation="h", y=-0.12),
+        **_CHART_LAYOUT,
     )
     st.plotly_chart(fig_radar, use_container_width=True)
 
@@ -238,17 +287,21 @@ with col_bar:
         orientation="h",
         barmode="group",
         template="plotly_dark",
-        height=380,
-        title="Judge Scores (0-10) by Dimension",
+        height=420,
+        title="Judge Scores (0–10) by Dimension",
         color_discrete_map={"Base": "#475569", "Fine-tuned": "#6366f1"},
         range_x=[0, 10],
     )
+    fig_judge_bar.update_layout(**_CHART_LAYOUT)
     st.plotly_chart(fig_judge_bar, use_container_width=True)
 
-st.divider()
+st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
 
-# ── Row 4: Inference throughput ───────────────────────────────────────────────
-st.subheader("Inference Throughput: vLLM vs. HF generate()")
+# ── Inference throughput ───────────────────────────────────────────────────────
+st.markdown(
+    "<div class='section-hdr'>⚡ Inference Throughput: vLLM vs. HF generate()</div>",
+    unsafe_allow_html=True,
+)
 
 infer = data["inference_comparison"]
 hf = infer["hf_generate"]
@@ -276,6 +329,8 @@ i4.metric(
     f"{vllm['gpu_util_pct']}%",
     f"+{vllm['gpu_util_pct'] - hf['gpu_util_pct']}%",
 )
+
+st.markdown("<br>", unsafe_allow_html=True)
 
 infer_df = pd.DataFrame(
     [
@@ -309,8 +364,9 @@ fig_infer = px.bar(
     color="Backend",
     barmode="group",
     template="plotly_dark",
-    height=350,
+    height=380,
     title="HF generate() vs vLLM Continuous Batching",
     color_discrete_map={"HF generate()": "#f59e0b", "vLLM": "#6366f1"},
 )
+fig_infer.update_layout(**_CHART_LAYOUT)
 st.plotly_chart(fig_infer, use_container_width=True)

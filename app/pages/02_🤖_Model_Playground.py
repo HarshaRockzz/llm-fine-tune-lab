@@ -6,27 +6,52 @@ import sys
 import time
 from pathlib import Path
 
-# Ensure repo root is first on sys.path so `import src` finds the local package,
-# not /mount/src/ on Streamlit Cloud.
+import httpx
+import streamlit as st
+
+# Ensure repo root is first on sys.path so `import src` finds the local package.
 _REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-import httpx
-import streamlit as st
+_APP_DIR = str(Path(__file__).resolve().parent.parent)
+if _APP_DIR not in sys.path:
+    sys.path.insert(0, _APP_DIR)
+
+from ui_styles import inject_global_css
 
 st.set_page_config(page_title="Model Playground", page_icon="🤖", layout="wide")
 
+inject_global_css()
+
+# Extra playground-specific styles
 st.markdown(
     """
 <style>
   .model-badge {
-      display:inline-block; background:#1e293b; border:1px solid #4f46e5;
-      border-radius:20px; padding:4px 14px; font-size:0.85rem; color:#a5b4fc; margin-right:8px;
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.3);
+      border-radius:20px; padding:5px 14px; font-size:.83rem;
+      color:#a5b4fc; margin-right:8px;
   }
-  .latency-tag { color:#10b981; font-size:0.78rem; }
-  .ab-left  { border-left: 3px solid #6366f1; padding-left: 12px; }
-  .ab-right { border-left: 3px solid #10b981; padding-left: 12px; }
+  .latency-tag {
+      display:inline-flex; align-items:center; gap:6px;
+      color:#10b981; font-size:.76rem; font-weight:600;
+      background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2);
+      border-radius:12px; padding:3px 10px; margin-top:6px;
+  }
+  .ab-left  { border-left:3px solid #6366f1; padding-left:14px; }
+  .ab-right { border-left:3px solid #10b981; padding-left:14px; }
+  .adapter-card {
+      background:rgba(255,255,255,0.025); border:1px solid rgba(51,65,85,0.45);
+      border-radius:14px; padding:16px; text-align:center;
+      transition:all 0.25s ease;
+  }
+  .adapter-card.selected {
+      border-color:#6366f1;
+      box-shadow:0 0 20px rgba(99,102,241,0.2);
+  }
+  .adapter-card:hover { border-color:rgba(99,102,241,0.45); transform:translateY(-3px); }
 </style>
 """,
     unsafe_allow_html=True,
@@ -49,7 +74,6 @@ OR_MODELS = {
     "Laguna XS.2 (free)": "poolside/laguna-xs.2:free",
 }
 
-# Fallback order — tried automatically if selected model returns 404
 _FALLBACK_MODELS = list(OR_MODELS.values())
 
 ADAPTER_PERSONAS = {
@@ -69,7 +93,14 @@ ADAPTER_PERSONAS = {
     ),
 }
 
-st.title("🤖 Model Playground")
+# ── Page header ───────────────────────────────────────────────────────────────
+st.markdown(
+    """
+<div class="page-title">🤖 Model Playground</div>
+<div class="page-caption">Stream responses from fine-tuned adapter personas · Compare models side-by-side.</div>
+""",
+    unsafe_allow_html=True,
+)
 
 mode = st.radio(
     "Mode",
@@ -78,21 +109,25 @@ mode = st.radio(
     label_visibility="collapsed",
 )
 
-st.caption(
-    "**Demo mode** — responses streamed from OpenRouter free models, conditioned to simulate each adapter. "
-    "Set `VLLM_API_URL` to connect a live vLLM server."
-    if DEMO_MODE
-    else "**Live mode** — connected to vLLM inference server."
+st.markdown(
+    f"""
+<div style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.18);
+     border-radius:10px;padding:10px 16px;font-size:.83rem;color:#64748b;margin-bottom:8px;">
+  {"<span style='color:#f59e0b;font-weight:600;'>⚡ Demo Mode</span> — responses streamed from OpenRouter free models, conditioned to simulate each adapter. Set <code>VLLM_API_URL</code> to connect a live vLLM server." if DEMO_MODE else "<span style='color:#10b981;font-weight:600;'>🟢 Live Mode</span> — connected to vLLM inference server."}
+</div>""",
+    unsafe_allow_html=True,
 )
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.header("Config")
-
+    st.markdown(
+        "<div style='color:#a5b4fc;font-weight:700;font-size:1rem;margin-bottom:12px;'>⚙️ Config</div>",
+        unsafe_allow_html=True,
+    )
     or_model_label = st.selectbox("OpenRouter Model", list(OR_MODELS.keys()), index=0)
     or_model_id = OR_MODELS[or_model_label]
 
-    st.divider()
+    st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
     adapter_a = st.selectbox(
         "Adapter A", list(ADAPTER_PERSONAS.keys()), index=1, key="adapter_a"
     )
@@ -101,7 +136,7 @@ with st.sidebar:
             "Adapter B", list(ADAPTER_PERSONAS.keys()), index=0, key="adapter_b"
         )
 
-    st.divider()
+    st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
     max_tokens = st.slider("Max tokens", 64, 1024, 512, 64)
     temperature = st.slider("Temperature", 0.0, 1.5, 0.7, 0.05)
     top_p = st.slider("Top-p", 0.1, 1.0, 0.9, 0.05)
@@ -117,10 +152,13 @@ with st.sidebar:
         st.session_state.pop("messages_b", None)
         st.rerun()
 
-    st.divider()
+    st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
     if "last_stats" in st.session_state:
         s = st.session_state.last_stats
-        st.caption("**Last request**")
+        st.markdown(
+            "<div style='color:#64748b;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;'>Last Request</div>",
+            unsafe_allow_html=True,
+        )
         st.markdown(f"Latency: `{s.get('latency_ms', 0):.0f} ms`")
         st.markdown(f"Tokens: `{s.get('tokens', '?')}`")
         st.markdown(f"Tok/s: `{s.get('tps', 0):.0f}`")
@@ -130,7 +168,6 @@ with st.sidebar:
 def _stream_openrouter(
     messages: list[dict], adapter_name: str, or_model: str
 ) -> tuple[str, float, int]:
-    """Stream from OpenRouter with auto-fallback if model returns 404."""
     from openai import NotFoundError
 
     from src.utils.openrouter import get_client
@@ -144,8 +181,6 @@ def _stream_openrouter(
             api_msgs.append({"role": m["role"], "content": m["content"]})
 
     client = get_client(OPENROUTER_KEY)
-
-    # Build candidate list: selected model first, then remaining fallbacks
     candidates = [or_model] + [m for m in _FALLBACK_MODELS if m != or_model]
 
     last_err = None
@@ -180,7 +215,7 @@ def _stream_openrouter(
 
         except NotFoundError as e:
             last_err = e
-            continue  # try next model in fallback list
+            continue
 
     raise RuntimeError(
         f"All free models unavailable. Last error: {last_err}. "
@@ -214,7 +249,8 @@ if mode == "💬 Single Chat":
         st.session_state.messages = []
 
     st.markdown(
-        f"<span class='model-badge'>🎯 {adapter_a}</span><span class='model-badge'>⚡ {or_model_label}</span>",
+        f"<span class='model-badge'>🎯 {adapter_a}</span>"
+        f"<span class='model-badge'>⚡ {or_model_label}</span>",
         unsafe_allow_html=True,
     )
 
@@ -223,7 +259,7 @@ if mode == "💬 Single Chat":
             st.markdown(msg["content"])
             if "latency_ms" in msg:
                 st.markdown(
-                    f"<span class='latency-tag'>⏱ {msg['latency_ms']:.0f}ms · {msg.get('tokens', '?')} tokens</span>",
+                    f"<span class='latency-tag'>⏱ {msg['latency_ms']:.0f} ms &nbsp;·&nbsp; {msg.get('tokens', '?')} tokens</span>",
                     unsafe_allow_html=True,
                 )
 
@@ -255,7 +291,7 @@ if mode == "💬 Single Chat":
 
                 tps = tokens / (latency_ms / 1000) if latency_ms > 0 else 0
                 st.markdown(
-                    f"<span class='latency-tag'>⏱ {latency_ms:.0f}ms · {tokens} tokens · {tps:.0f} tok/s</span>",
+                    f"<span class='latency-tag'>⏱ {latency_ms:.0f} ms &nbsp;·&nbsp; {tokens} tokens &nbsp;·&nbsp; {tps:.0f} tok/s</span>",
                     unsafe_allow_html=True,
                 )
                 st.session_state.last_stats = {
@@ -288,16 +324,15 @@ else:
     col_a, col_b = st.columns(2)
     with col_a:
         st.markdown(
-            f"<div class='ab-left'><b>Model A</b> — <span style='color:#a5b4fc'>{adapter_a}</span></div>",
+            f"<div class='ab-left'><b style='color:#a5b4fc;'>Model A</b> — <span style='color:#c7d2fe;font-size:.88rem;'>{adapter_a}</span></div>",
             unsafe_allow_html=True,
         )
     with col_b:
         st.markdown(
-            f"<div class='ab-right'><b>Model B</b> — <span style='color:#6ee7b7'>{adapter_b}</span></div>",
+            f"<div class='ab-right'><b style='color:#6ee7b7;'>Model B</b> — <span style='color:#a7f3d0;font-size:.88rem;'>{adapter_b}</span></div>",
             unsafe_allow_html=True,
         )
 
-    # Render history
     msgs_a = st.session_state.messages
     msgs_b = st.session_state.messages_b
     max_len = max(len(msgs_a), len(msgs_b))
@@ -311,7 +346,7 @@ else:
                     st.markdown(m["content"])
                     if "latency_ms" in m:
                         st.markdown(
-                            f"<span class='latency-tag'>⏱ {m['latency_ms']:.0f}ms</span>",
+                            f"<span class='latency-tag'>⏱ {m['latency_ms']:.0f} ms</span>",
                             unsafe_allow_html=True,
                         )
         if i < len(msgs_b):
@@ -321,7 +356,7 @@ else:
                     st.markdown(m["content"])
                     if "latency_ms" in m:
                         st.markdown(
-                            f"<span class='latency-tag'>⏱ {m['latency_ms']:.0f}ms</span>",
+                            f"<span class='latency-tag'>⏱ {m['latency_ms']:.0f} ms</span>",
                             unsafe_allow_html=True,
                         )
 
@@ -331,7 +366,6 @@ else:
 
         c1, c2 = st.columns(2)
 
-        # Run both in parallel using Streamlit columns + streaming
         with c1:
             with st.chat_message("user"):
                 st.markdown(user_input)
@@ -345,7 +379,7 @@ else:
                         )
                         tps_a = tok_a / (lat_a / 1000) if lat_a > 0 else 0
                         st.markdown(
-                            f"<span class='latency-tag'>⏱ {lat_a:.0f}ms · {tok_a} tok · {tps_a:.0f} tok/s</span>",
+                            f"<span class='latency-tag'>⏱ {lat_a:.0f} ms · {tok_a} tok · {tps_a:.0f} tok/s</span>",
                             unsafe_allow_html=True,
                         )
                         st.session_state.messages.append(
@@ -372,7 +406,7 @@ else:
                         )
                         tps_b = tok_b / (lat_b / 1000) if lat_b > 0 else 0
                         st.markdown(
-                            f"<span class='latency-tag'>⏱ {lat_b:.0f}ms · {tok_b} tok · {tps_b:.0f} tok/s</span>",
+                            f"<span class='latency-tag'>⏱ {lat_b:.0f} ms · {tok_b} tok · {tps_b:.0f} tok/s</span>",
                             unsafe_allow_html=True,
                         )
                         st.session_state.messages_b.append(
@@ -386,8 +420,8 @@ else:
                 except Exception as e:
                     st.error(str(e))
 
-# ── Adapter comparison cards ───────────────────────────────────────────────────
-with st.expander("📋 Adapter Stats"):
+# ── Adapter stats ──────────────────────────────────────────────────────────────
+with st.expander("📋 Adapter Performance Stats"):
     STATS = {
         "base": {
             "mmlu": "54.0%",
@@ -395,6 +429,7 @@ with st.expander("📋 Adapter Stats"):
             "gpu": "38.4 GB",
             "rank": "—",
             "method": "Base",
+            "color": "#475569",
         },
         "llama3-qlora-r32": {
             "mmlu": "63.0%",
@@ -402,6 +437,7 @@ with st.expander("📋 Adapter Stats"):
             "gpu": "16.8 GB",
             "rank": "32",
             "method": "QLoRA",
+            "color": "#6366f1",
         },
         "mistral-qlora-best": {
             "mmlu": "68.0%",
@@ -409,6 +445,7 @@ with st.expander("📋 Adapter Stats"):
             "gpu": "15.9 GB",
             "rank": "64",
             "method": "QLoRA",
+            "color": "#8b5cf6",
         },
         "llama3-qlora-final-champion": {
             "mmlu": "71.0%",
@@ -416,19 +453,29 @@ with st.expander("📋 Adapter Stats"):
             "gpu": "16.1 GB",
             "rank": "64",
             "method": "QLoRA",
+            "color": "#10b981",
         },
     }
     cols = st.columns(4)
     for col, (name, stats) in zip(cols, STATS.items()):
-        selected = name in (adapter_a, adapter_b if mode == "⚔️ A/B Comparison" else "")
-        border = "2px solid #6366f1" if selected else "1px solid #334155"
+        selected = name in (
+            adapter_a,
+            adapter_b if mode == "⚔️ A/B Comparison" else "",
+        )
+        border = (
+            f"2px solid {stats['color']}"
+            if selected
+            else "1px solid rgba(51,65,85,0.45)"
+        )
+        glow = f"box-shadow:0 0 20px {stats['color']}33;" if selected else ""
         col.markdown(
             f"""
-<div style="background:#0f172a;border:{border};border-radius:10px;padding:14px;text-align:center;">
-  <div style="font-size:0.82rem;color:#a5b4fc;font-weight:600;">{name}</div>
-  <div style="color:#10b981;font-size:1.1rem;font-weight:700;margin-top:6px;">{stats["mmlu"]}</div>
-  <div style="color:#94a3b8;font-size:0.75rem;">MMLU · Judge: {stats["judge"]}</div>
-  <div style="color:#475569;font-size:0.72rem;margin-top:4px;">{stats["method"]} · r={stats["rank"]} · {stats["gpu"]}</div>
+<div class="adapter-card {"selected" if selected else ""}"
+     style="border:{border};{glow}">
+  <div style="font-size:.82rem;color:#a5b4fc;font-weight:700;margin-bottom:8px;">{name}</div>
+  <div style="color:{stats["color"]};font-size:1.4rem;font-weight:800;">{stats["mmlu"]}</div>
+  <div style="color:#64748b;font-size:.75rem;margin-top:4px;">MMLU · Judge: {stats["judge"]}</div>
+  <div style="color:#475569;font-size:.72rem;margin-top:6px;">{stats["method"]} · r={stats["rank"]} · {stats["gpu"]}</div>
 </div>""",
             unsafe_allow_html=True,
         )
