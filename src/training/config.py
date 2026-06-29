@@ -1,4 +1,5 @@
 """Training configuration using Pydantic v2 dataclasses."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,7 +12,15 @@ class LoRAConfig(BaseModel):
     r: int = Field(16, description="LoRA rank")
     lora_alpha: int = Field(32, description="LoRA alpha scaling")
     target_modules: list[str] = Field(
-        default=["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+        default=[
+            "q_proj",
+            "v_proj",
+            "k_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+        ]
     )
     lora_dropout: float = Field(0.05)
     bias: Literal["none", "all", "lora_only"] = "none"
@@ -84,10 +93,7 @@ class TrainingConfig(BaseModel):
         return self
 
     def effective_batch_size(self) -> int:
-        return (
-            self.per_device_train_batch_size
-            * self.gradient_accumulation_steps
-        )
+        return self.per_device_train_batch_size * self.gradient_accumulation_steps
 
 
 LLAMA3_8B_LORA = TrainingConfig(

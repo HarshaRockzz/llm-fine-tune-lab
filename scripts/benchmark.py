@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Throughput benchmark: compare vLLM continuous batching vs HF generate()."""
+
 import argparse
 import logging
 import sys
@@ -31,11 +32,20 @@ def benchmark_hf(model_name: str, adapter_path: str, n_requests: int, max_tokens
 
     logging.info("Loading HF model...")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16, device_map="auto")
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name, torch_dtype=torch.bfloat16, device_map="auto"
+    )
     if adapter_path:
         model = PeftModel.from_pretrained(model, adapter_path).merge_and_unload()
 
-    pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=max_tokens, do_sample=False, pad_token_id=tokenizer.eos_token_id)
+    pipe = pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tokenizer,
+        max_new_tokens=max_tokens,
+        do_sample=False,
+        pad_token_id=tokenizer.eos_token_id,
+    )
 
     prompts = (SAMPLE_PROMPTS * (n_requests // len(SAMPLE_PROMPTS) + 1))[:n_requests]
     latencies = []
@@ -68,14 +78,25 @@ def benchmark_vllm(url: str, model: str, n_requests: int, max_tokens: int):
 
     async def _single(client, prompt):
         t0 = time.perf_counter()
-        r = await client.post(f"{url}/v1/completions", json={"model": model, "prompt": prompt, "max_tokens": max_tokens, "temperature": 0.0}, timeout=60)
+        r = await client.post(
+            f"{url}/v1/completions",
+            json={
+                "model": model,
+                "prompt": prompt,
+                "max_tokens": max_tokens,
+                "temperature": 0.0,
+            },
+            timeout=60,
+        )
         lat = (time.perf_counter() - t0) * 1000
         data = r.json()
         tokens = data["usage"]["completion_tokens"]
         return lat, tokens
 
     async def _run():
-        prompts = (SAMPLE_PROMPTS * (n_requests // len(SAMPLE_PROMPTS) + 1))[:n_requests]
+        prompts = (SAMPLE_PROMPTS * (n_requests // len(SAMPLE_PROMPTS) + 1))[
+            :n_requests
+        ]
         async with httpx.AsyncClient() as client:
             tasks = [_single(client, p) for p in prompts]
             results = await asyncio.gather(*tasks)
@@ -113,9 +134,13 @@ def main():
 
     results = []
     if args.backend in ("hf", "both"):
-        results.append(benchmark_hf(args.model, args.adapter, args.n_requests, args.max_tokens))
+        results.append(
+            benchmark_hf(args.model, args.adapter, args.n_requests, args.max_tokens)
+        )
     if args.backend in ("vllm", "both"):
-        results.append(benchmark_vllm(args.vllm_url, args.model, args.n_requests, args.max_tokens))
+        results.append(
+            benchmark_vllm(args.vllm_url, args.model, args.n_requests, args.max_tokens)
+        )
 
     print("\n=== Benchmark Results ===")
     for r in results:
@@ -126,7 +151,9 @@ def main():
         print(f"  Total time:    {r['total_time_s']:.1f} s")
 
     if len(results) == 2:
-        speedup = results[1]["throughput_tok_per_sec"] / results[0]["throughput_tok_per_sec"]
+        speedup = (
+            results[1]["throughput_tok_per_sec"] / results[0]["throughput_tok_per_sec"]
+        )
         print(f"\nvLLM speedup: {speedup:.2f}×")
 
 

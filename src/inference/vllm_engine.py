@@ -1,4 +1,5 @@
 """vLLM inference engine with LoRA adapter support and continuous batching."""
+
 from __future__ import annotations
 
 import logging
@@ -39,9 +40,7 @@ class VLLMEngine:
         try:
             from vllm import AsyncLLMEngine, AsyncEngineArgs
         except ImportError:
-            raise RuntimeError(
-                "vLLM is not installed. Run: pip install vllm"
-            )
+            raise RuntimeError("vLLM is not installed. Run: pip install vllm")
 
         engine_args = AsyncEngineArgs(
             model=self.model,
@@ -114,7 +113,7 @@ class VLLMEngine:
             if request_output.outputs:
                 text = request_output.outputs[0].text
                 if stream:
-                    delta = text[len(last_output):]
+                    delta = text[len(last_output) :]
                     if delta:
                         yield delta
                     last_output = text
@@ -132,7 +131,9 @@ class VLLMEngine:
     ) -> str:
         """Non-streaming generation — returns complete text."""
         result = ""
-        async for chunk in self.generate_async(prompt, request_id, stream=False, **kwargs):
+        async for chunk in self.generate_async(
+            prompt, request_id, stream=False, **kwargs
+        ):
             result = chunk
         return result
 

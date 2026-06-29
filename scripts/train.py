@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """CLI entry point for fine-tuning. Supports preset configs and custom YAML."""
+
 import argparse
 import logging
 import sys
@@ -19,18 +20,44 @@ sys.path.insert(0, str(ROOT))
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Fine-tune Llama-3 or Mistral with LoRA/QLoRA")
+    parser = argparse.ArgumentParser(
+        description="Fine-tune Llama-3 or Mistral with LoRA/QLoRA"
+    )
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--preset", choices=["llama3-lora", "llama3-qlora", "mistral-lora", "mistral-qlora"], help="Use a predefined config preset")
+    group.add_argument(
+        "--preset",
+        choices=["llama3-lora", "llama3-qlora", "mistral-lora", "mistral-qlora"],
+        help="Use a predefined config preset",
+    )
     group.add_argument("--config", type=Path, help="Path to a YAML config file")
 
-    parser.add_argument("--dataset", type=Path, default=None, help="Local JSONL dataset (overrides HF dataset)")
-    parser.add_argument("--output-dir", type=Path, default=None, help="Override output directory")
-    parser.add_argument("--resume", type=str, default=None, help="Resume from checkpoint path")
-    parser.add_argument("--dry-run", action="store_true", help="Validate config without training")
-    parser.add_argument("--merge", action="store_true", help="Merge adapter into base model after training")
-    parser.add_argument("--push-to-hub", type=str, default=None, help="HuggingFace repo to push merged model")
+    parser.add_argument(
+        "--dataset",
+        type=Path,
+        default=None,
+        help="Local JSONL dataset (overrides HF dataset)",
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=None, help="Override output directory"
+    )
+    parser.add_argument(
+        "--resume", type=str, default=None, help="Resume from checkpoint path"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Validate config without training"
+    )
+    parser.add_argument(
+        "--merge",
+        action="store_true",
+        help="Merge adapter into base model after training",
+    )
+    parser.add_argument(
+        "--push-to-hub",
+        type=str,
+        default=None,
+        help="HuggingFace repo to push merged model",
+    )
 
     args = parser.parse_args()
 

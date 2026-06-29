@@ -1,4 +1,5 @@
 """LoRA adapter registry — load, validate, and hot-swap adapters at runtime."""
+
 from __future__ import annotations
 
 import json

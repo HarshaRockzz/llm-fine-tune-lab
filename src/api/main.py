@@ -1,4 +1,5 @@
 """FastAPI application factory — production LLM serving with vLLM + Prometheus."""
+
 from __future__ import annotations
 
 import logging
@@ -88,7 +89,9 @@ def create_app() -> FastAPI:
     app.include_router(evaluation.router)
 
     @app.exception_handler(Exception)
-    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    async def global_exception_handler(
+        request: Request, exc: Exception
+    ) -> JSONResponse:
         logger.error(f"Unhandled exception: {exc}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": str(exc)})
 

@@ -1,4 +1,5 @@
 """Inference routes — /v1/generate, /v1/chat, /v1/stream."""
+
 from __future__ import annotations
 
 import time
@@ -9,8 +10,11 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from src.api.schemas import (
-    ChatRequest, ChatResponse, ChatMessage,
-    GenerationRequest, GenerationResponse,
+    ChatRequest,
+    ChatResponse,
+    ChatMessage,
+    GenerationRequest,
+    GenerationResponse,
 )
 from src.api.middleware.prometheus import record_generation
 from src.inference.vllm_engine import VLLMEngine, get_engine
@@ -23,7 +27,11 @@ def _build_chat_prompt(messages: list[ChatMessage], model_type: str = "llama3") 
     prompt = ""
     for msg in messages:
         if model_type == "llama3":
-            role_token = {"system": "<|system|>", "user": "<|user|>", "assistant": "<|assistant|>"}[msg.role]
+            role_token = {
+                "system": "<|system|>",
+                "user": "<|user|>",
+                "assistant": "<|assistant|>",
+            }[msg.role]
             prompt += f"{role_token}\n{msg.content}<|end|>\n"
         else:
             if msg.role == "user":

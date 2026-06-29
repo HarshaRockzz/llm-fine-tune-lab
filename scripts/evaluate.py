@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """CLI for running the evaluation harness on a checkpoint or vLLM endpoint."""
+
 import argparse
 import logging
 import sys
 from pathlib import Path
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).parent.parent
@@ -13,17 +16,31 @@ sys.path.insert(0, str(ROOT))
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate a fine-tuned model checkpoint")
+    parser = argparse.ArgumentParser(
+        description="Evaluate a fine-tuned model checkpoint"
+    )
 
     parser.add_argument("--model", required=True, help="HF model name or local path")
     parser.add_argument("--adapter", type=Path, default=None, help="LoRA adapter path")
-    parser.add_argument("--vllm-url", type=str, default=None, help="vLLM server URL (e.g., http://localhost:8000)")
+    parser.add_argument(
+        "--vllm-url",
+        type=str,
+        default=None,
+        help="vLLM server URL (e.g., http://localhost:8000)",
+    )
 
-    parser.add_argument("--benchmarks", nargs="+",
+    parser.add_argument(
+        "--benchmarks",
+        nargs="+",
         choices=["mmlu", "truthfulqa", "custom", "llm_judge"],
         default=["mmlu", "truthfulqa", "custom"],
     )
-    parser.add_argument("--mmlu-subjects", nargs="+", default=None, help="Specific MMLU subjects (default: all)")
+    parser.add_argument(
+        "--mmlu-subjects",
+        nargs="+",
+        default=None,
+        help="Specific MMLU subjects (default: all)",
+    )
     parser.add_argument("--max-samples", type=int, default=100)
     parser.add_argument("--checkpoint-name", type=str, default="eval")
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/eval_results"))
@@ -64,7 +81,9 @@ def main():
     if "custom" in results:
         logger.info(f"Custom Accuracy: {results['custom'].get('accuracy', 'N/A')}")
     if "llm_judge" in results:
-        logger.info(f"LLM Judge Composite: {results['llm_judge']['aggregate']['composite']:.4f}")
+        logger.info(
+            f"LLM Judge Composite: {results['llm_judge']['aggregate']['composite']:.4f}"
+        )
 
 
 if __name__ == "__main__":

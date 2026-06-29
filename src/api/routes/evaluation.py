@@ -1,4 +1,5 @@
 """Evaluation trigger routes — kick off benchmarks via REST API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -38,6 +39,7 @@ def _run_eval(job_id: str, req: EvalRequest, engine: VLLMEngine) -> None:
 
     async def _model_fn(prompt: str) -> str:
         import uuid
+
         adapter = req.model if req.model != "base" else None
         return await engine.generate(
             prompt=prompt,

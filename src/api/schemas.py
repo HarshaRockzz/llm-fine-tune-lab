@@ -1,4 +1,5 @@
 """Pydantic schemas for FastAPI request/response models."""
+
 from __future__ import annotations
 
 from typing import Literal, Optional
@@ -16,14 +17,16 @@ class GenerationRequest(BaseModel):
     stop: Optional[list[str]] = None
     stream: bool = False
 
-    model_config = {"json_schema_extra": {
-        "example": {
-            "prompt": "Explain gradient descent in simple terms.",
-            "model": "llama3-qlora",
-            "max_tokens": 256,
-            "temperature": 0.7,
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "prompt": "Explain gradient descent in simple terms.",
+                "model": "llama3-qlora",
+                "max_tokens": 256,
+                "temperature": 0.7,
+            }
         }
-    }}
+    }
 
 
 class GenerationResponse(BaseModel):

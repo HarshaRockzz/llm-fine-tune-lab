@@ -1,4 +1,5 @@
 """Main evaluation harness — runs all benchmarks and writes checkpoint regression reports."""
+
 from __future__ import annotations
 
 import json
@@ -83,7 +84,9 @@ def _build_model_fn(
     from peft import PeftModel
 
     logger.info(f"Loading model for eval: {model_name_or_path}")
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_name_or_path, trust_remote_code=True
+    )
     model = AutoModelForCausalLM.from_pretrained(
         model_name_or_path,
         torch_dtype=torch.bfloat16,
@@ -150,12 +153,15 @@ class EvalHarness:
             logger.info("Running custom evaluation...")
             evaluator = CustomEvaluator(eval_path=cfg.custom_eval_path)
             results["custom"] = evaluator.evaluate(model_fn, verbose=True)
-            logger.info(f"Custom accuracy: {results['custom'].get('accuracy', 0.0):.4f}")
+            logger.info(
+                f"Custom accuracy: {results['custom'].get('accuracy', 0.0):.4f}"
+            )
 
         if cfg.run_llm_judge and os.environ.get("ANTHROPIC_API_KEY"):
             logger.info("Running LLM-as-judge evaluation...")
             judge = LLMJudge(model=cfg.judge_model)
             from src.evaluation.benchmarks.custom import CustomEvaluator as CE
+
             ce = CE(eval_path=cfg.custom_eval_path)
             examples = ce._load_examples()[: cfg.judge_max_examples]
             judge_examples = [

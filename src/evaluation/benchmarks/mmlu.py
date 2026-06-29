@@ -1,4 +1,5 @@
 """MMLU (Massive Multitask Language Understanding) benchmark evaluation."""
+
 from __future__ import annotations
 
 import logging
@@ -9,55 +10,131 @@ from datasets import load_dataset
 logger = logging.getLogger(__name__)
 
 MMLU_SUBJECTS = [
-    "abstract_algebra", "anatomy", "astronomy", "business_ethics",
-    "clinical_knowledge", "college_biology", "college_chemistry",
-    "college_computer_science", "college_mathematics", "college_medicine",
-    "college_physics", "computer_security", "conceptual_physics",
-    "econometrics", "electrical_engineering", "elementary_mathematics",
-    "formal_logic", "global_facts", "high_school_biology",
-    "high_school_chemistry", "high_school_computer_science",
-    "high_school_european_history", "high_school_geography",
-    "high_school_government_and_politics", "high_school_macroeconomics",
-    "high_school_mathematics", "high_school_microeconomics",
-    "high_school_physics", "high_school_psychology",
-    "high_school_statistics", "high_school_us_history",
-    "high_school_world_history", "human_aging", "human_sexuality",
-    "international_law", "jurisprudence", "logical_fallacies",
-    "machine_learning", "management", "marketing", "medical_genetics",
-    "miscellaneous", "moral_disputes", "moral_scenarios", "nutrition",
-    "philosophy", "prehistory", "professional_accounting",
-    "professional_law", "professional_medicine", "professional_psychology",
-    "public_relations", "security_studies", "sociology",
-    "us_foreign_policy", "virology", "world_religions",
+    "abstract_algebra",
+    "anatomy",
+    "astronomy",
+    "business_ethics",
+    "clinical_knowledge",
+    "college_biology",
+    "college_chemistry",
+    "college_computer_science",
+    "college_mathematics",
+    "college_medicine",
+    "college_physics",
+    "computer_security",
+    "conceptual_physics",
+    "econometrics",
+    "electrical_engineering",
+    "elementary_mathematics",
+    "formal_logic",
+    "global_facts",
+    "high_school_biology",
+    "high_school_chemistry",
+    "high_school_computer_science",
+    "high_school_european_history",
+    "high_school_geography",
+    "high_school_government_and_politics",
+    "high_school_macroeconomics",
+    "high_school_mathematics",
+    "high_school_microeconomics",
+    "high_school_physics",
+    "high_school_psychology",
+    "high_school_statistics",
+    "high_school_us_history",
+    "high_school_world_history",
+    "human_aging",
+    "human_sexuality",
+    "international_law",
+    "jurisprudence",
+    "logical_fallacies",
+    "machine_learning",
+    "management",
+    "marketing",
+    "medical_genetics",
+    "miscellaneous",
+    "moral_disputes",
+    "moral_scenarios",
+    "nutrition",
+    "philosophy",
+    "prehistory",
+    "professional_accounting",
+    "professional_law",
+    "professional_medicine",
+    "professional_psychology",
+    "public_relations",
+    "security_studies",
+    "sociology",
+    "us_foreign_policy",
+    "virology",
+    "world_religions",
 ]
 
 MMLU_CATEGORIES = {
     "STEM": [
-        "abstract_algebra", "astronomy", "college_biology", "college_chemistry",
-        "college_computer_science", "college_mathematics", "college_physics",
-        "computer_security", "conceptual_physics", "electrical_engineering",
-        "elementary_mathematics", "formal_logic", "high_school_biology",
-        "high_school_chemistry", "high_school_computer_science",
-        "high_school_mathematics", "high_school_physics", "high_school_statistics",
+        "abstract_algebra",
+        "astronomy",
+        "college_biology",
+        "college_chemistry",
+        "college_computer_science",
+        "college_mathematics",
+        "college_physics",
+        "computer_security",
+        "conceptual_physics",
+        "electrical_engineering",
+        "elementary_mathematics",
+        "formal_logic",
+        "high_school_biology",
+        "high_school_chemistry",
+        "high_school_computer_science",
+        "high_school_mathematics",
+        "high_school_physics",
+        "high_school_statistics",
         "machine_learning",
     ],
     "Humanities": [
-        "formal_logic", "high_school_european_history", "high_school_us_history",
-        "high_school_world_history", "international_law", "jurisprudence",
-        "logical_fallacies", "moral_disputes", "moral_scenarios", "philosophy",
-        "prehistory", "professional_law", "world_religions",
+        "formal_logic",
+        "high_school_european_history",
+        "high_school_us_history",
+        "high_school_world_history",
+        "international_law",
+        "jurisprudence",
+        "logical_fallacies",
+        "moral_disputes",
+        "moral_scenarios",
+        "philosophy",
+        "prehistory",
+        "professional_law",
+        "world_religions",
     ],
     "Social Sciences": [
-        "econometrics", "high_school_geography", "high_school_government_and_politics",
-        "high_school_macroeconomics", "high_school_microeconomics",
-        "high_school_psychology", "human_sexuality", "management", "marketing",
-        "professional_psychology", "public_relations", "security_studies",
-        "sociology", "us_foreign_policy",
+        "econometrics",
+        "high_school_geography",
+        "high_school_government_and_politics",
+        "high_school_macroeconomics",
+        "high_school_microeconomics",
+        "high_school_psychology",
+        "human_sexuality",
+        "management",
+        "marketing",
+        "professional_psychology",
+        "public_relations",
+        "security_studies",
+        "sociology",
+        "us_foreign_policy",
     ],
     "Other": [
-        "anatomy", "business_ethics", "clinical_knowledge", "college_medicine",
-        "global_facts", "human_aging", "medical_genetics", "miscellaneous",
-        "nutrition", "professional_accounting", "professional_medicine", "virology",
+        "anatomy",
+        "business_ethics",
+        "clinical_knowledge",
+        "college_medicine",
+        "global_facts",
+        "human_aging",
+        "medical_genetics",
+        "miscellaneous",
+        "nutrition",
+        "professional_accounting",
+        "professional_medicine",
+        "virology",
     ],
 }
 
@@ -120,9 +197,10 @@ class MMLUEvaluator:
             for i, ex in enumerate(dev_split):
                 if i >= self.n_shots:
                     break
-                few_shot_prefix += _format_prompt(
-                    ex["question"], ex["choices"], subject
-                ) + f" {CHOICES[ex['answer']]}\n\n"
+                few_shot_prefix += (
+                    _format_prompt(ex["question"], ex["choices"], subject)
+                    + f" {CHOICES[ex['answer']]}\n\n"
+                )
 
             correct = 0
             total = 0
@@ -150,7 +228,9 @@ class MMLUEvaluator:
         # Aggregate by category
         category_results: dict[str, dict] = {}
         for cat, cat_subjects in MMLU_CATEGORIES.items():
-            cat_correct = sum(results[s]["correct"] for s in cat_subjects if s in results)
+            cat_correct = sum(
+                results[s]["correct"] for s in cat_subjects if s in results
+            )
             cat_total = sum(results[s]["total"] for s in cat_subjects if s in results)
             category_results[cat] = {
                 "correct": cat_correct,

@@ -1,4 +1,5 @@
 """OpenRouter client — OpenAI-compatible API with free Llama-3.1 and embedding models."""
+
 from __future__ import annotations
 
 import os
@@ -10,11 +11,11 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 # Free models available via OpenRouter
 FREE_CHAT_MODELS = {
-    "llama3-8b":     "meta-llama/llama-3-8b-instruct:free",
-    "llama3-70b":    "meta-llama/llama-3.1-70b-instruct:free",
-    "mistral-7b":    "mistralai/mistral-7b-instruct:free",
-    "gemma2-9b":     "google/gemma-2-9b-it:free",
-    "qwen2-7b":      "qwen/qwen-2-7b-instruct:free",
+    "llama3-8b": "meta-llama/llama-3-8b-instruct:free",
+    "llama3-70b": "meta-llama/llama-3.1-70b-instruct:free",
+    "mistral-7b": "mistralai/mistral-7b-instruct:free",
+    "gemma2-9b": "google/gemma-2-9b-it:free",
+    "qwen2-7b": "qwen/qwen-2-7b-instruct:free",
 }
 
 DEFAULT_EMBED_MODEL = os.environ.get(
@@ -28,7 +29,11 @@ DEFAULT_CHAT_MODEL = os.environ.get(
 
 
 def get_client(api_key: Optional[str] = None) -> OpenAI:
-    key = api_key or os.environ.get("OPENROUTER_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+    key = (
+        api_key
+        or os.environ.get("OPENROUTER_API_KEY")
+        or os.environ.get("ANTHROPIC_API_KEY")
+    )
     if not key:
         raise RuntimeError("Set OPENROUTER_API_KEY environment variable")
     return OpenAI(
@@ -62,17 +67,21 @@ def chat(
     )
 
     if stream:
+
         def _gen():
             for chunk in response:
                 delta = chunk.choices[0].delta.content
                 if delta:
                     yield delta
+
         return _gen()
 
     return response.choices[0].message.content or ""
 
 
-def embed(texts: list[str], model: Optional[str] = None, api_key: Optional[str] = None) -> list[list[float]]:
+def embed(
+    texts: list[str], model: Optional[str] = None, api_key: Optional[str] = None
+) -> list[list[float]]:
     """Generate embeddings via OpenRouter embedding endpoint."""
     client = get_client(api_key)
     mdl = model or DEFAULT_EMBED_MODEL

@@ -1,4 +1,5 @@
 """Custom domain evaluation sets with flexible task types."""
+
 from __future__ import annotations
 
 import json
@@ -12,14 +13,22 @@ TaskType = Literal["multiple_choice", "generation", "classification", "extractio
 
 
 def _mc_accuracy(predictions: list[str], references: list[str]) -> float:
-    correct = sum(p.strip().upper() == r.strip().upper() for p, r in zip(predictions, references))
+    correct = sum(
+        p.strip().upper() == r.strip().upper() for p, r in zip(predictions, references)
+    )
     return correct / len(predictions) if predictions else 0.0
 
 
 def _exact_match(predictions: list[str], references: list[str]) -> float:
-    return sum(
-        p.strip().lower() == r.strip().lower() for p, r in zip(predictions, references)
-    ) / len(predictions) if predictions else 0.0
+    return (
+        sum(
+            p.strip().lower() == r.strip().lower()
+            for p, r in zip(predictions, references)
+        )
+        / len(predictions)
+        if predictions
+        else 0.0
+    )
 
 
 def _rouge_l(prediction: str, reference: str) -> float:
@@ -87,7 +96,12 @@ class CustomEvaluator:
             },
             {
                 "prompt": "Which Python built-in implements a max-heap?",
-                "choices": ["heapq (negate values)", "sortedcontainers", "collections.heap", "queue.PriorityQueue"],
+                "choices": [
+                    "heapq (negate values)",
+                    "sortedcontainers",
+                    "collections.heap",
+                    "queue.PriorityQueue",
+                ],
                 "answer": "A",
                 "category": "python",
             },
@@ -149,13 +163,17 @@ class CustomEvaluator:
             category_results[category]["references"].append(reference)
 
             if verbose:
-                logger.info(f"  Q: {prompt[:60]}... | Pred: {pred[:20]} | Ref: {reference}")
+                logger.info(
+                    f"  Q: {prompt[:60]}... | Pred: {pred[:20]} | Ref: {reference}"
+                )
 
         if self.task_type == "multiple_choice":
             overall_score = _mc_accuracy(predictions, references)
             metric_name = "accuracy"
         elif self.task_type == "generation":
-            overall_score = float(sum(rouge_scores) / len(rouge_scores)) if rouge_scores else 0.0
+            overall_score = (
+                float(sum(rouge_scores) / len(rouge_scores)) if rouge_scores else 0.0
+            )
             metric_name = "rouge_l"
         else:
             overall_score = _exact_match(predictions, references)

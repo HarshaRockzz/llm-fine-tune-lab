@@ -1,4 +1,5 @@
 """Production LoRA and QLoRA fine-tuning trainer using PEFT + TRL."""
+
 from __future__ import annotations
 
 import logging
@@ -54,7 +55,9 @@ def _build_lora_config(config: TrainingConfig) -> LoraConfig:
 
 def load_model_and_tokenizer(config: TrainingConfig):
     """Load base model with optional 4-bit quantization + tokenizer."""
-    logger.info(f"Loading model: {config.model_name_or_path} (QLoRA={config.use_qlora})")
+    logger.info(
+        f"Loading model: {config.model_name_or_path} (QLoRA={config.use_qlora})"
+    )
 
     bnb_config = _build_bnb_config(config)
 
@@ -148,7 +151,9 @@ def train(
         )
 
     model, tokenizer = load_model_and_tokenizer(config)
-    dataset: DatasetDict = load_and_prepare_dataset(config, tokenizer, local_dataset_path)
+    dataset: DatasetDict = load_and_prepare_dataset(
+        config, tokenizer, local_dataset_path
+    )
 
     training_args = build_training_arguments(config)
 

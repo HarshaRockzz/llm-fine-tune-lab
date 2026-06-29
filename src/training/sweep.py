@@ -1,4 +1,5 @@
 """W&B sweep configuration for hyperparameter search across 20+ experiments."""
+
 from __future__ import annotations
 
 import os
@@ -72,16 +73,24 @@ def sweep_train_fn() -> None:
         base_config = PRESETS[preset].model_copy(deep=True)
 
         # Patch config with sweep hyperparams
-        base_config.learning_rate = cfg_dict.get("learning_rate", base_config.learning_rate)
-        base_config.num_train_epochs = cfg_dict.get("num_train_epochs", base_config.num_train_epochs)
+        base_config.learning_rate = cfg_dict.get(
+            "learning_rate", base_config.learning_rate
+        )
+        base_config.num_train_epochs = cfg_dict.get(
+            "num_train_epochs", base_config.num_train_epochs
+        )
         base_config.per_device_train_batch_size = cfg_dict.get(
             "per_device_train_batch_size", base_config.per_device_train_batch_size
         )
         base_config.gradient_accumulation_steps = cfg_dict.get(
             "gradient_accumulation_steps", base_config.gradient_accumulation_steps
         )
-        base_config.warmup_ratio = cfg_dict.get("warmup_ratio", base_config.warmup_ratio)
-        base_config.weight_decay = cfg_dict.get("weight_decay", base_config.weight_decay)
+        base_config.warmup_ratio = cfg_dict.get(
+            "warmup_ratio", base_config.warmup_ratio
+        )
+        base_config.weight_decay = cfg_dict.get(
+            "weight_decay", base_config.weight_decay
+        )
         base_config.neftune_noise_alpha = cfg_dict.get(
             "neftune_noise_alpha", base_config.neftune_noise_alpha
         )
@@ -91,8 +100,12 @@ def sweep_train_fn() -> None:
 
         # LoRA specific
         base_config.lora.r = cfg_dict.get("lora_r", base_config.lora.r)
-        base_config.lora.lora_alpha = cfg_dict.get("lora_alpha", base_config.lora.lora_alpha)
-        base_config.lora.lora_dropout = cfg_dict.get("lora_dropout", base_config.lora.lora_dropout)
+        base_config.lora.lora_alpha = cfg_dict.get(
+            "lora_alpha", base_config.lora.lora_alpha
+        )
+        base_config.lora.lora_dropout = cfg_dict.get(
+            "lora_dropout", base_config.lora.lora_dropout
+        )
 
         if base_config.use_qlora:
             base_config.qlora.r = base_config.lora.r

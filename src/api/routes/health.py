@@ -1,4 +1,5 @@
 """Health, readiness, and model listing routes."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
@@ -16,6 +17,7 @@ async def health(engine: VLLMEngine = Depends(get_engine)) -> HealthResponse:
     gpu_used, gpu_total = None, None
     try:
         import torch
+
         if torch.cuda.is_available():
             gpu_used = torch.cuda.memory_allocated(0) / 1e9
             gpu_total = torch.cuda.get_device_properties(0).total_memory / 1e9

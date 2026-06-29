@@ -1,4 +1,5 @@
 """Experiment Search — RAG over 20+ runs using Qdrant + OpenRouter embeddings."""
+
 import json
 import os
 from pathlib import Path
@@ -9,7 +10,8 @@ import streamlit as st
 
 st.set_page_config(page_title="Experiment Search", page_icon="🔍", layout="wide")
 
-st.markdown("""
+st.markdown(
+    """
 <style>
   .result-card {
       background:#1e293b; border:1px solid #334155; border-radius:10px;
@@ -28,7 +30,9 @@ st.markdown("""
       border-radius:0 10px 10px 0; padding:16px; line-height:1.7;
   }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 DATA_PATH = Path(__file__).parent.parent.parent / "data"
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
@@ -55,7 +59,9 @@ st.caption(
 )
 
 if not OPENROUTER_KEY:
-    st.warning("Set `OPENROUTER_API_KEY` to enable semantic search. Showing keyword search fallback.")
+    st.warning(
+        "Set `OPENROUTER_API_KEY` to enable semantic search. Showing keyword search fallback."
+    )
 
 # ── Index status ───────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -73,6 +79,7 @@ with st.sidebar:
         with st.spinner("Embedding experiments into Qdrant..."):
             try:
                 from src.utils.qdrant_store import index_experiments
+
                 n = index_experiments(experiments, force_reindex=True)
                 st.success(f"Indexed {n} experiments!")
             except Exception as e:
@@ -128,7 +135,11 @@ if query:
         with st.spinner("Embedding query + searching Qdrant..."):
             try:
                 # Lazy-index on first search
-                from src.utils.qdrant_store import index_experiments, search_experiments, rag_answer
+                from src.utils.qdrant_store import (
+                    index_experiments,
+                    search_experiments,
+                    rag_answer,
+                )
 
                 # Index if not yet done (in-memory for Streamlit Cloud)
                 try:
@@ -157,7 +168,9 @@ if query:
     if answer:
         st.subheader("🤖 RAG Answer")
         st.markdown(f"<div class='answer-box'>{answer}</div>", unsafe_allow_html=True)
-        st.caption(f"Grounded on top-{top_k} semantically similar experiment runs · OpenRouter LLM")
+        st.caption(
+            f"Grounded on top-{top_k} semantically similar experiment runs · OpenRouter LLM"
+        )
         st.divider()
 
     # ── Search results ────────────────────────────────────────────────────────
@@ -166,31 +179,43 @@ if query:
     for r in results:
         score = r.get("_score", 0)
         method_color = "#10b981" if r["method"] == "QLoRA" else "#6366f1"
-        st.markdown(f"""
+        st.markdown(
+            f"""
 <div class="result-card">
   <span class="score-badge">similarity: {score:.3f}</span>
-  <strong style="color:#e2e8f0">{r['run_name']}</strong>
-  <span style="color:{method_color};margin-left:8px;font-size:0.85rem">{r['method']}</span>
-  <span style="color:#475569;font-size:0.82rem;margin-left:6px">{r['model']}</span>
+  <strong style="color:#e2e8f0">{r["run_name"]}</strong>
+  <span style="color:{method_color};margin-left:8px;font-size:0.85rem">{r["method"]}</span>
+  <span style="color:#475569;font-size:0.82rem;margin-left:6px">{r["model"]}</span>
   <div style="margin-top:10px;">
-    <span class="metric-pill">MMLU: {r['mmlu_overall']:.1%}</span>
-    <span class="metric-pill">Eval Loss: {r['eval_loss_final']:.3f}</span>
-    <span class="metric-pill">GPU: {r['gpu_mem_gb']:.1f} GB</span>
-    <span class="metric-pill">Judge: {r['judge_composite']:.1f}/10</span>
-    <span class="metric-pill">r={r['rank']} α={r['lora_alpha']}</span>
-    <span class="metric-pill">lr={r['lr']:.0e}</span>
-    <span class="metric-pill">{r['epochs']}ep</span>
-    <span class="metric-pill">NEFTune={r['neftune']}</span>
+    <span class="metric-pill">MMLU: {r["mmlu_overall"]:.1%}</span>
+    <span class="metric-pill">Eval Loss: {r["eval_loss_final"]:.3f}</span>
+    <span class="metric-pill">GPU: {r["gpu_mem_gb"]:.1f} GB</span>
+    <span class="metric-pill">Judge: {r["judge_composite"]:.1f}/10</span>
+    <span class="metric-pill">r={r["rank"]} α={r["lora_alpha"]}</span>
+    <span class="metric-pill">lr={r["lr"]:.0e}</span>
+    <span class="metric-pill">{r["epochs"]}ep</span>
+    <span class="metric-pill">NEFTune={r["neftune"]}</span>
   </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+            unsafe_allow_html=True,
+        )
 
     # ── Result comparison chart ───────────────────────────────────────────────
     if results:
         st.divider()
         st.subheader("Result Comparison")
         df_res = pd.DataFrame(results)
-        metric_col = st.selectbox("Compare by", ["mmlu_overall", "eval_loss_final", "judge_composite", "gpu_mem_gb", "custom_acc"])
+        metric_col = st.selectbox(
+            "Compare by",
+            [
+                "mmlu_overall",
+                "eval_loss_final",
+                "judge_composite",
+                "gpu_mem_gb",
+                "custom_acc",
+            ],
+        )
         fig = px.bar(
             df_res,
             x="run_name",

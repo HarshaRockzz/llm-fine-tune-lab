@@ -1,4 +1,5 @@
 """Qdrant vector store — index and search experiment runs semantically."""
+
 from __future__ import annotations
 
 import logging
@@ -65,7 +66,9 @@ def index_experiments(experiments: list[dict], force_reindex: bool = False) -> i
         batch = texts[i : i + batch_size]
         vecs = embed(batch)
         embeddings.extend(vecs)
-        logger.info(f"Embedded {min(i + batch_size, len(texts))}/{len(texts)} experiments")
+        logger.info(
+            f"Embedded {min(i + batch_size, len(texts))}/{len(texts)} experiments"
+        )
 
     points = [
         PointStruct(
@@ -93,10 +96,7 @@ def search_experiments(query: str, top_k: int = 5) -> list[dict]:
         limit=top_k,
         with_payload=True,
     )
-    return [
-        {**hit.payload, "_score": round(hit.score, 4)}
-        for hit in hits
-    ]
+    return [{**hit.payload, "_score": round(hit.score, 4)} for hit in hits]
 
 
 def rag_answer(query: str, top_k: int = 5) -> tuple[str, list[dict]]:
@@ -107,9 +107,7 @@ def rag_answer(query: str, top_k: int = 5) -> tuple[str, list[dict]]:
     if not results:
         return "No relevant experiments found.", []
 
-    context = "\n\n".join(
-        f"[{i+1}] {r['document']}" for i, r in enumerate(results)
-    )
+    context = "\n\n".join(f"[{i + 1}] {r['document']}" for i, r in enumerate(results))
 
     system = (
         "You are an ML engineering assistant with deep expertise in LLM fine-tuning. "
@@ -131,7 +129,9 @@ Provide a precise, data-driven answer."""
             {"role": "system", "content": system},
             {"role": "user", "content": prompt},
         ],
-        model=os.environ.get("OPENROUTER_MODEL", "meta-llama/llama-3.1-70b-instruct:free"),
+        model=os.environ.get(
+            "OPENROUTER_MODEL", "meta-llama/llama-3.1-70b-instruct:free"
+        ),
         temperature=0.2,
         max_tokens=1024,
     )

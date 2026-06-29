@@ -1,4 +1,5 @@
 """Prometheus middleware for per-request observability."""
+
 from __future__ import annotations
 
 import time

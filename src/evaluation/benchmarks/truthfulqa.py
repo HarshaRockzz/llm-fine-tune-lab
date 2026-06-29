@@ -1,4 +1,5 @@
 """TruthfulQA benchmark evaluation with MC1 and MC2 scoring."""
+
 from __future__ import annotations
 
 import logging
@@ -77,7 +78,9 @@ class TruthfulQAEvaluator:
             dict with mc1_accuracy, mc2_f1 (optional), category breakdown
         """
         try:
-            ds = load_dataset("truthful_qa", "multiple_choice", trust_remote_code=True)["validation"]
+            ds = load_dataset("truthful_qa", "multiple_choice", trust_remote_code=True)[
+                "validation"
+            ]
         except Exception as e:
             logger.error(f"Could not load TruthfulQA: {e}")
             return {"mc1_accuracy": 0.0, "mc2_f1": 0.0, "total": 0}
@@ -105,14 +108,15 @@ class TruthfulQAEvaluator:
             category_scores[category].append(mc1)
 
             if verbose and i % 50 == 0:
-                logger.info(f"  TruthfulQA progress: {i}/{min(self.max_samples, len(ds))}")
+                logger.info(
+                    f"  TruthfulQA progress: {i}/{min(self.max_samples, len(ds))}"
+                )
 
         mc1_accuracy = float(np.mean(mc1_scores)) if mc1_scores else 0.0
         mc2_f1 = float(np.mean(mc2_scores)) if mc2_scores else 0.0
 
         cat_summary = {
-            cat: float(np.mean(scores))
-            for cat, scores in category_scores.items()
+            cat: float(np.mean(scores)) for cat, scores in category_scores.items()
         }
 
         return {

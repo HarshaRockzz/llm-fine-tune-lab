@@ -1,4 +1,5 @@
 """Dataset loading, preprocessing, and tokenization for SFT fine-tuning."""
+
 from __future__ import annotations
 
 import logging
@@ -57,9 +58,7 @@ def _apply_chat_template(example: dict, tokenizer: Any, model_type: str) -> dict
     return {"text": text}
 
 
-def _filter_long_sequences(
-    example: dict, tokenizer: Any, max_length: int
-) -> bool:
+def _filter_long_sequences(example: dict, tokenizer: Any, max_length: int) -> bool:
     tokens = tokenizer(example["text"], truncation=False)["input_ids"]
     return len(tokens) <= max_length
 
@@ -79,7 +78,9 @@ def load_and_prepare_dataset(
         if "train" not in raw:
             raw = raw["train"].train_test_split(test_size=0.05, seed=42)
     else:
-        logger.info(f"Loading {config.dataset_name} ({config.dataset_split}) from HuggingFace Hub")
+        logger.info(
+            f"Loading {config.dataset_name} ({config.dataset_split}) from HuggingFace Hub"
+        )
         raw = load_dataset(config.dataset_name, split=config.dataset_split)
         raw = raw.train_test_split(test_size=0.05, seed=42)
 
@@ -118,6 +119,7 @@ def load_and_prepare_dataset(
 def load_domain_dataset(domain: str, max_samples: int = 5000) -> "Dataset":
     """Load a specific domain dataset for domain-specific fine-tuning."""
     from datasets import load_dataset
+
     DOMAIN_MAP = {
         "medical": ("medalpaca/medical_meadow_medqa", "train"),
         "legal": ("nguyen-brat/legal-qa", "train"),
@@ -126,7 +128,9 @@ def load_domain_dataset(domain: str, max_samples: int = 5000) -> "Dataset":
         "science": ("allenai/sciq", "train"),
     }
     if domain not in DOMAIN_MAP:
-        raise ValueError(f"Unknown domain: {domain}. Choose from {list(DOMAIN_MAP.keys())}")
+        raise ValueError(
+            f"Unknown domain: {domain}. Choose from {list(DOMAIN_MAP.keys())}"
+        )
 
     name, split = DOMAIN_MAP[domain]
     ds = load_dataset(name, split=split)
@@ -140,23 +144,34 @@ def prepare_sample_data(output_path: Path, n_samples: int = 1000) -> Path:
     import json
     import random
 
-    topics = ["Python", "machine learning", "data structures", "algorithms", "statistics"]
+    topics = [
+        "Python",
+        "machine learning",
+        "data structures",
+        "algorithms",
+        "statistics",
+    ]
     examples = []
     for i in range(n_samples):
         topic = random.choice(topics)
-        examples.append({
-            "messages": [
-                {"role": "user", "content": f"Explain {topic} concept #{i % 20} in detail."},
-                {
-                    "role": "assistant",
-                    "content": (
-                        f"Here is a detailed explanation of {topic} concept #{i % 20}. "
-                        "This is a synthetic example for testing the training pipeline. "
-                        "In production, replace this with real domain data."
-                    ),
-                },
-            ]
-        })
+        examples.append(
+            {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": f"Explain {topic} concept #{i % 20} in detail.",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": (
+                            f"Here is a detailed explanation of {topic} concept #{i % 20}. "
+                            "This is a synthetic example for testing the training pipeline. "
+                            "In production, replace this with real domain data."
+                        ),
+                    },
+                ]
+            }
+        )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:

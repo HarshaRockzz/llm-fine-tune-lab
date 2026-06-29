@@ -1,4 +1,5 @@
 """LLM-as-judge scoring — uses OpenRouter (free Llama-3 / Mistral models) as the evaluator."""
+
 from __future__ import annotations
 
 import json
@@ -72,7 +73,9 @@ class JudgeScore:
             overall=data["overall"]["score"],
             verdict=data.get("verdict", "pass"),
             reasoning={
-                k: v.get("reasoning", "") for k, v in data.items() if isinstance(v, dict)
+                k: v.get("reasoning", "")
+                for k, v in data.items()
+                if isinstance(v, dict)
             },
         )
 
@@ -141,24 +144,28 @@ class LLMJudge:
                 logger.warning(f"Judge scoring failed for example {i}: {e}")
                 continue
 
-            results.append({
-                "question": question,
-                "response": response,
-                "reference": reference,
-                "scores": {
-                    "factual_accuracy": score.factual_accuracy,
-                    "helpfulness": score.helpfulness,
-                    "clarity": score.clarity,
-                    "completeness": score.completeness,
-                    "safety": score.safety,
-                    "overall": score.overall,
-                    "composite": score.composite,
-                    "verdict": score.verdict,
-                },
-            })
+            results.append(
+                {
+                    "question": question,
+                    "response": response,
+                    "reference": reference,
+                    "scores": {
+                        "factual_accuracy": score.factual_accuracy,
+                        "helpfulness": score.helpfulness,
+                        "clarity": score.clarity,
+                        "completeness": score.completeness,
+                        "safety": score.safety,
+                        "overall": score.overall,
+                        "composite": score.composite,
+                        "verdict": score.verdict,
+                    },
+                }
+            )
 
             if verbose and i % 10 == 0:
-                logger.info(f"  Judge [{i}/{len(examples)}] composite={score.composite:.2f} verdict={score.verdict}")
+                logger.info(
+                    f"  Judge [{i}/{len(examples)}] composite={score.composite:.2f} verdict={score.verdict}"
+                )
 
         if not results:
             return {"error": "No results", "total": 0}
@@ -166,9 +173,19 @@ class LLMJudge:
         scores_list = [r["scores"] for r in results]
         avg_scores = {
             metric: sum(s[metric] for s in scores_list) / len(scores_list)
-            for metric in ["factual_accuracy", "helpfulness", "clarity", "completeness", "safety", "overall", "composite"]
+            for metric in [
+                "factual_accuracy",
+                "helpfulness",
+                "clarity",
+                "completeness",
+                "safety",
+                "overall",
+                "composite",
+            ]
         }
-        pass_rate = sum(1 for r in results if r["scores"]["verdict"] == "pass") / len(results)
+        pass_rate = sum(1 for r in results if r["scores"]["verdict"] == "pass") / len(
+            results
+        )
 
         return {
             "aggregate": {**avg_scores, "pass_rate": pass_rate},
