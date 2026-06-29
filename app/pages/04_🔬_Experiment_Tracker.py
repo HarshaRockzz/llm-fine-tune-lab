@@ -182,7 +182,7 @@ if selected_dims and len(df_f) > 0:
 
     dimensions_list = []
     for col, label in zip(cols, selected_dims):
-        col_data = pc_df[col].fillna(0)
+        col_data = pd.to_numeric(pc_df[col], errors="coerce").fillna(0)
         d: dict = {"label": label, "values": col_data}
         col_min, col_max = float(col_data.min()), float(col_data.max())
         if col_min != col_max:
