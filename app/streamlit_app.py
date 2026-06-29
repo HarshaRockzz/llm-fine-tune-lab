@@ -29,8 +29,8 @@ st.markdown(
     <span class="live-dot"></span>
     <span style="color:#6ee7b7;font-size:.78rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Production Demo</span>
   </div>
-  <h1 style="font-size:3.4rem;font-weight:900;margin:0;line-height:1.05;letter-spacing:-1.5px;">
-    <span class="gradient-text">🧪 LLM Fine-Tune Lab</span>
+  <h1 style="font-size:3.4rem;font-weight:900;margin:0;line-height:1.05;letter-spacing:-1.5px;color:#f1f5f9;">
+    🧪 <span class="gradient-text">LLM Fine-Tune Lab</span>
   </h1>
   <p style="color:#94a3b8;margin-top:18px;font-size:1.08rem;max-width:720px;line-height:1.8;">
     Production-grade fine-tuning pipeline for
