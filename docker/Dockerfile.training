@@ -1,0 +1,38 @@
+FROM nvcr.io/nvidia/pytorch:24.01-py3
+
+LABEL maintainer="LLM Fine-Tune Lab"
+LABEL description="Training container for LoRA/QLoRA fine-tuning"
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/workspace/.cache/huggingface \
+    WANDB_DIR=/workspace/outputs/wandb
+
+WORKDIR /workspace
+
+# System deps
+RUN apt-get update && apt-get install -y \
+    git curl wget build-essential \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install FlashAttention2 (requires CUDA toolkit in base image)
+RUN pip install flash-attn --no-build-isolation
+
+# Training requirements
+COPY requirements-training.txt .
+RUN pip install -r requirements-training.txt
+
+# Project source
+COPY src/ ./src/
+COPY configs/ ./configs/
+COPY scripts/ ./scripts/
+COPY data/ ./data/
+COPY setup.py .
+
+RUN pip install -e . --no-deps
+
+RUN mkdir -p outputs/checkpoints outputs/adapters outputs/eval_results
+
+ENTRYPOINT ["python", "scripts/train.py"]

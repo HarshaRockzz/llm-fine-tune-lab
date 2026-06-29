@@ -1,0 +1,63 @@
+{
+  "baseline": {
+    "name": "Llama-3-8B Base",
+    "mmlu_overall": 0.540,
+    "mmlu_stem": 0.521,
+    "mmlu_humanities": 0.558,
+    "mmlu_social_sciences": 0.545,
+    "mmlu_other": 0.537,
+    "truthfulqa_mc1": 0.382,
+    "truthfulqa_mc2": 0.534,
+    "custom_accuracy": 0.540,
+    "judge_composite": 5.8,
+    "judge_pass_rate": 0.52
+  },
+  "fine_tuned": {
+    "name": "Llama-3-8B QLoRA (Champion)",
+    "mmlu_overall": 0.710,
+    "mmlu_stem": 0.698,
+    "mmlu_humanities": 0.725,
+    "mmlu_social_sciences": 0.718,
+    "mmlu_other": 0.702,
+    "truthfulqa_mc1": 0.570,
+    "truthfulqa_mc2": 0.712,
+    "custom_accuracy": 0.710,
+    "judge_composite": 7.9,
+    "judge_pass_rate": 0.87
+  },
+  "mmlu_categories": {
+    "STEM": {"baseline": 0.521, "finetuned": 0.698},
+    "Humanities": {"baseline": 0.558, "finetuned": 0.725},
+    "Social Sciences": {"baseline": 0.545, "finetuned": 0.718},
+    "Other": {"baseline": 0.537, "finetuned": 0.702}
+  },
+  "judge_dimensions": {
+    "Factual Accuracy": {"baseline": 5.6, "finetuned": 8.1},
+    "Helpfulness": {"baseline": 6.0, "finetuned": 8.0},
+    "Clarity": {"baseline": 6.2, "finetuned": 8.3},
+    "Completeness": {"baseline": 5.5, "finetuned": 7.8},
+    "Safety": {"baseline": 7.8, "finetuned": 9.1}
+  },
+  "checkpoints": [
+    {"step": 0, "mmlu": 0.540, "custom": 0.540, "eval_loss": 1.850},
+    {"step": 250, "mmlu": 0.558, "custom": 0.552, "eval_loss": 1.712},
+    {"step": 500, "mmlu": 0.571, "custom": 0.563, "eval_loss": 1.634},
+    {"step": 750, "mmlu": 0.589, "custom": 0.578, "eval_loss": 1.581},
+    {"step": 1000, "mmlu": 0.608, "custom": 0.592, "eval_loss": 1.521},
+    {"step": 1250, "mmlu": 0.624, "custom": 0.607, "eval_loss": 1.468},
+    {"step": 1500, "mmlu": 0.638, "custom": 0.619, "eval_loss": 1.421},
+    {"step": 1750, "mmlu": 0.652, "custom": 0.632, "eval_loss": 1.388},
+    {"step": 2000, "mmlu": 0.665, "custom": 0.644, "eval_loss": 1.362},
+    {"step": 2250, "mmlu": 0.674, "custom": 0.655, "eval_loss": 1.341},
+    {"step": 2500, "mmlu": 0.681, "custom": 0.664, "eval_loss": 1.325},
+    {"step": 2750, "mmlu": 0.690, "custom": 0.672, "eval_loss": 1.315},
+    {"step": 3000, "mmlu": 0.698, "custom": 0.683, "eval_loss": 1.309},
+    {"step": 3250, "mmlu": 0.704, "custom": 0.691, "eval_loss": 1.307},
+    {"step": 3500, "mmlu": 0.708, "custom": 0.699, "eval_loss": 1.306},
+    {"step": 3750, "mmlu": 0.710, "custom": 0.710, "eval_loss": 1.305}
+  ],
+  "inference_comparison": {
+    "hf_generate": {"throughput_tok_per_sec": 483, "p50_latency_ms": 1842, "p95_latency_ms": 3104, "gpu_util_pct": 61},
+    "vllm_continuous_batching": {"throughput_tok_per_sec": 1158, "p50_latency_ms": 764, "p95_latency_ms": 1298, "gpu_util_pct": 92}
+  }
+}

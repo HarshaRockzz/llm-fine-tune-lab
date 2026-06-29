@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Outputs (large files)
+outputs/checkpoints/
+outputs/wandb/
+outputs/eval_results/*.json
+outputs/adapters/
+
+# Data (large datasets)
+data/*.jsonl
+data/*.parquet
+data/*.arrow
+!data/demo_*.json
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# HuggingFace cache
+.cache/
+*.safetensors
+*.bin
+
+# W&B
+wandb/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Docker
+.docker/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MyPy
+.mypy_cache/

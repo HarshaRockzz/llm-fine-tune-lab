@@ -1,0 +1,51 @@
+model_name_or_path: meta-llama/Meta-Llama-3-8B
+model_type: llama3
+use_qlora: true
+
+qlora:
+  r: 64
+  lora_alpha: 16
+  target_modules:
+    - q_proj
+    - v_proj
+    - k_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+  lora_dropout: 0.05
+  bias: none
+  load_in_4bit: true
+  bnb_4bit_compute_dtype: bfloat16
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+
+dataset_name: HuggingFaceH4/ultrachat_200k
+dataset_split: train_sft
+max_samples: 50000
+max_seq_length: 2048
+
+num_train_epochs: 5
+per_device_train_batch_size: 8
+per_device_eval_batch_size: 4
+gradient_accumulation_steps: 2
+learning_rate: 5e-5
+lr_scheduler_type: cosine
+warmup_ratio: 0.08
+weight_decay: 0.01
+optim: paged_adamw_32bit
+bf16: true
+fp16: false
+max_grad_norm: 0.3
+neftune_noise_alpha: 10.0
+gradient_checkpointing: true
+
+output_dir: outputs/checkpoints/llama3-qlora
+logging_steps: 10
+eval_steps: 250
+save_steps: 250
+save_total_limit: 3
+
+report_to: wandb
+wandb_project: llm-fine-tune-lab
+run_name: llama3-qlora-r64-champion

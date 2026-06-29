@@ -1,0 +1,35 @@
+FROM nvcr.io/nvidia/cuda:12.3.1-cudnn9-devel-ubuntu22.04
+
+LABEL description="FastAPI + vLLM inference server"
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/workspace/.cache/huggingface
+
+WORKDIR /workspace
+
+RUN apt-get update && apt-get install -y \
+    python3.11 python3.11-dev python3-pip git curl \
+    && ln -sf python3.11 /usr/bin/python3 \
+    && ln -sf python3.11 /usr/bin/python \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# vLLM + API dependencies
+COPY requirements-inference.txt .
+RUN pip install -r requirements-inference.txt
+
+# Source
+COPY src/ ./src/
+COPY setup.py .
+RUN pip install -e . --no-deps
+
+RUN mkdir -p outputs/adapters
+
+EXPOSE 8000 9090
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["python", "-m", "src.api.main"]
