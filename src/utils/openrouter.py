@@ -9,13 +9,16 @@ from openai import OpenAI
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
-# Free models available via OpenRouter (June 2025 — Llama :free tiers retired)
+# Free models — confirmed active on OpenRouter June 2025
 FREE_CHAT_MODELS = {
-    "gemma2-9b": "google/gemma-2-9b-it:free",
-    "mistral-7b": "mistralai/mistral-7b-instruct:free",
-    "qwen2-7b": "qwen/qwen-2-7b-instruct:free",
-    "llama3-70b": "meta-llama/llama-3.1-70b-instruct:free",
-    "llama3-3b": "meta-llama/llama-3.2-3b-instruct:free",
+    "gpt-oss-120b": "openai/gpt-oss-120b:free",
+    "nemotron-ultra": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "nemotron-super": "nvidia/nemotron-3-super-120b-a12b:free",
+    "laguna-m1": "poolside/laguna-m.1:free",
+    "gemma4-31b": "google/gemma-4-31b-it:free",
+    "nemotron-nano": "nvidia/nemotron-3-nano-30b-a3b:free",
+    "north-mini-code": "cohere/north-mini-code:free",
+    "laguna-xs2": "poolside/laguna-xs.2:free",
 }
 
 DEFAULT_EMBED_MODEL = os.environ.get(
@@ -24,7 +27,7 @@ DEFAULT_EMBED_MODEL = os.environ.get(
 )
 DEFAULT_CHAT_MODEL = os.environ.get(
     "OPENROUTER_MODEL",
-    "mistralai/mistral-7b-instruct:free",
+    "openai/gpt-oss-120b:free",
 )
 
 

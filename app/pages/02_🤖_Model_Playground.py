@@ -37,14 +37,16 @@ OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 VLLM_URL = os.environ.get("VLLM_API_URL", "")
 DEMO_MODE = not VLLM_URL
 
-# OpenRouter free models — ordered by historical reliability (June 2025)
+# OpenRouter free models — confirmed active June 2025
 OR_MODELS = {
-    "Mistral-7B (free)": "mistralai/mistral-7b-instruct:free",
-    "Qwen-2-7B (free)": "qwen/qwen-2-7b-instruct:free",
-    "Llama-3.2-3B (free)": "meta-llama/llama-3.2-3b-instruct:free",
-    "Llama-3.1-70B (free)": "meta-llama/llama-3.1-70b-instruct:free",
-    "Gemma-2-9B (free)": "google/gemma-2-9b-it:free",
-    "DeepSeek-R1 1.5B (free)": "deepseek/deepseek-r1-distill-qwen-1.5b:free",
+    "GPT-OSS 120B (free)": "openai/gpt-oss-120b:free",
+    "Nemotron Ultra 550B (free)": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "Nemotron Super 120B (free)": "nvidia/nemotron-3-super-120b-a12b:free",
+    "Laguna M.1 (free)": "poolside/laguna-m.1:free",
+    "Gemma-4 31B (free)": "google/gemma-4-31b-it:free",
+    "Nemotron Nano 30B (free)": "nvidia/nemotron-3-nano-30b-a3b:free",
+    "North Mini Code (free)": "cohere/north-mini-code:free",
+    "Laguna XS.2 (free)": "poolside/laguna-xs.2:free",
 }
 
 # Fallback order — tried automatically if selected model returns 404
