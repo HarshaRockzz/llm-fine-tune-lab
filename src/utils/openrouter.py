@@ -9,13 +9,13 @@ from openai import OpenAI
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
-# Free models available via OpenRouter (updated June 2025)
+# Free models available via OpenRouter (June 2025 — Llama :free tiers retired)
 FREE_CHAT_MODELS = {
-    "llama3-8b": "meta-llama/llama-3.1-8b-instruct:free",
-    "llama3-70b": "meta-llama/llama-3.1-70b-instruct:free",
-    "mistral-7b": "mistralai/mistral-7b-instruct:free",
     "gemma2-9b": "google/gemma-2-9b-it:free",
+    "mistral-7b": "mistralai/mistral-7b-instruct:free",
     "qwen2-7b": "qwen/qwen-2-7b-instruct:free",
+    "llama3-70b": "meta-llama/llama-3.1-70b-instruct:free",
+    "llama3-3b": "meta-llama/llama-3.2-3b-instruct:free",
 }
 
 DEFAULT_EMBED_MODEL = os.environ.get(
@@ -24,7 +24,7 @@ DEFAULT_EMBED_MODEL = os.environ.get(
 )
 DEFAULT_CHAT_MODEL = os.environ.get(
     "OPENROUTER_MODEL",
-    "meta-llama/llama-3.1-8b-instruct:free",
+    "google/gemma-2-9b-it:free",
 )
 
 

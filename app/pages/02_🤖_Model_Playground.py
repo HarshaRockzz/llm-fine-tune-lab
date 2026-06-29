@@ -37,13 +37,13 @@ OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 VLLM_URL = os.environ.get("VLLM_API_URL", "")
 DEMO_MODE = not VLLM_URL
 
-# OpenRouter free models (updated June 2025 — llama-3-8b:free was retired)
+# OpenRouter free models (June 2025 — Llama :free tiers retired, using stable alternatives)
 OR_MODELS = {
-    "Llama-3.1-8B (free)": "meta-llama/llama-3.1-8b-instruct:free",
-    "Llama-3.1-70B (free)": "meta-llama/llama-3.1-70b-instruct:free",
-    "Mistral-7B (free)": "mistralai/mistral-7b-instruct:free",
     "Gemma-2-9B (free)": "google/gemma-2-9b-it:free",
+    "Mistral-7B (free)": "mistralai/mistral-7b-instruct:free",
     "Qwen-2-7B (free)": "qwen/qwen-2-7b-instruct:free",
+    "Llama-3.2-3B (free)": "meta-llama/llama-3.2-3b-instruct:free",
+    "Llama-3.1-70B (free)": "meta-llama/llama-3.1-70b-instruct:free",
 }
 
 ADAPTER_PERSONAS = {

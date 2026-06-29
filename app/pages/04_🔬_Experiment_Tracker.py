@@ -178,11 +178,17 @@ selected_dims = st.multiselect(
 
 if selected_dims and len(df_f) > 0:
     cols = [dims_avail[d] for d in selected_dims]
-    pc_df = df_f[cols + ["mmlu_overall"]].copy()
+    # Deduplicate: if "mmlu_overall" is already in cols (via "MMLU" dim), don't add it again
+    all_cols = list(dict.fromkeys(cols + ["mmlu_overall"]))
+    pc_df = df_f[all_cols].copy()
 
     dimensions_list = []
     for col, label in zip(cols, selected_dims):
-        col_data = pd.to_numeric(pc_df[col], errors="coerce").fillna(0)
+        col_series = pc_df[col]
+        # Guard against duplicate-column DataFrames returning a 2-D slice
+        if isinstance(col_series, pd.DataFrame):
+            col_series = col_series.iloc[:, 0]
+        col_data = pd.to_numeric(col_series, errors="coerce").fillna(0)
         d: dict = {"label": label, "values": col_data}
         col_min, col_max = float(col_data.min()), float(col_data.max())
         if col_min != col_max:
