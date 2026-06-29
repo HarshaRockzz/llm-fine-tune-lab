@@ -1,8 +1,16 @@
 """Experiment Search — RAG over 20+ runs using Qdrant + OpenRouter embeddings."""
 
+# ruff: noqa: E402
 import json
 import os
+import sys
 from pathlib import Path
+
+# Ensure repo root is first on sys.path so `import src` finds the local package,
+# not /mount/src/ on Streamlit Cloud.
+_REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 import pandas as pd
 import plotly.express as px

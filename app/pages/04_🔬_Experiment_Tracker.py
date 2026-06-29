@@ -182,14 +182,14 @@ if selected_dims and len(df_f) > 0:
 
     dimensions_list = []
     for col, label in zip(cols, selected_dims):
-        dimensions_list.append(
-            dict(
-                range=[pc_df[col].min(), pc_df[col].max()],
-                label=label,
-                values=pc_df[col],
-                tickformat=".2%" if col == "mmlu_overall" else None,
-            )
-        )
+        col_data = pc_df[col].fillna(0)
+        d: dict = {"label": label, "values": col_data}
+        col_min, col_max = float(col_data.min()), float(col_data.max())
+        if col_min != col_max:
+            d["range"] = [col_min, col_max]
+        if col == "mmlu_overall":
+            d["tickformat"] = ".2%"
+        dimensions_list.append(d)
 
     fig_pc = go.Figure(
         go.Parcoords(

@@ -1,7 +1,16 @@
 """Model Playground — streaming chat + side-by-side A/B comparison via OpenRouter."""
 
+# ruff: noqa: E402
 import os
+import sys
 import time
+from pathlib import Path
+
+# Ensure repo root is first on sys.path so `import src` finds the local package,
+# not /mount/src/ on Streamlit Cloud.
+_REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 import httpx
 import streamlit as st
