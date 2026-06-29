@@ -24,7 +24,7 @@ DEFAULT_EMBED_MODEL = os.environ.get(
 )
 DEFAULT_CHAT_MODEL = os.environ.get(
     "OPENROUTER_MODEL",
-    "google/gemma-2-9b-it:free",
+    "mistralai/mistral-7b-instruct:free",
 )
 
 

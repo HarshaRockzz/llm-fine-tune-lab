@@ -37,14 +37,18 @@ OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 VLLM_URL = os.environ.get("VLLM_API_URL", "")
 DEMO_MODE = not VLLM_URL
 
-# OpenRouter free models (June 2025 — Llama :free tiers retired, using stable alternatives)
+# OpenRouter free models — ordered by historical reliability (June 2025)
 OR_MODELS = {
-    "Gemma-2-9B (free)": "google/gemma-2-9b-it:free",
     "Mistral-7B (free)": "mistralai/mistral-7b-instruct:free",
     "Qwen-2-7B (free)": "qwen/qwen-2-7b-instruct:free",
     "Llama-3.2-3B (free)": "meta-llama/llama-3.2-3b-instruct:free",
     "Llama-3.1-70B (free)": "meta-llama/llama-3.1-70b-instruct:free",
+    "Gemma-2-9B (free)": "google/gemma-2-9b-it:free",
+    "DeepSeek-R1 1.5B (free)": "deepseek/deepseek-r1-distill-qwen-1.5b:free",
 }
+
+# Fallback order — tried automatically if selected model returns 404
+_FALLBACK_MODELS = list(OR_MODELS.values())
 
 ADAPTER_PERSONAS = {
     "base": "You are the base Llama-3-8B model with no fine-tuning. Answer helpfully.",
@@ -124,7 +128,9 @@ with st.sidebar:
 def _stream_openrouter(
     messages: list[dict], adapter_name: str, or_model: str
 ) -> tuple[str, float, int]:
-    """Stream from OpenRouter, return (full_text, latency_ms, tokens)."""
+    """Stream from OpenRouter with auto-fallback if model returns 404."""
+    from openai import NotFoundError
+
     from src.utils.openrouter import get_client
 
     persona = ADAPTER_PERSONAS.get(adapter_name, ADAPTER_PERSONAS["base"])
@@ -136,31 +142,48 @@ def _stream_openrouter(
             api_msgs.append({"role": m["role"], "content": m["content"]})
 
     client = get_client(OPENROUTER_KEY)
-    t0 = time.perf_counter()
 
-    stream = client.chat.completions.create(
-        model=or_model,
-        messages=api_msgs,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        stream=True,
+    # Build candidate list: selected model first, then remaining fallbacks
+    candidates = [or_model] + [m for m in _FALLBACK_MODELS if m != or_model]
+
+    last_err = None
+    for model_id in candidates:
+        try:
+            t0 = time.perf_counter()
+            stream = client.chat.completions.create(
+                model=model_id,
+                messages=api_msgs,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                stream=True,
+            )
+            if model_id != or_model:
+                st.caption(f"ℹ️ `{or_model}` unavailable — using `{model_id}`")
+
+            collected = []
+            placeholder = st.empty()
+            display = ""
+            for chunk in stream:
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    collected.append(delta)
+                    display += delta
+                    placeholder.markdown(display + "▌")
+
+            latency_ms = (time.perf_counter() - t0) * 1000
+            full_text = "".join(collected)
+            placeholder.markdown(full_text)
+            tokens = len(full_text.split()) * 4 // 3
+            return full_text, latency_ms, tokens
+
+        except NotFoundError as e:
+            last_err = e
+            continue  # try next model in fallback list
+
+    raise RuntimeError(
+        f"All free models unavailable. Last error: {last_err}. "
+        "Visit openrouter.ai/models?free=true to find currently active free models."
     )
-
-    collected = []
-    placeholder = st.empty()
-    display = ""
-    for chunk in stream:
-        delta = chunk.choices[0].delta.content
-        if delta:
-            collected.append(delta)
-            display += delta
-            placeholder.markdown(display + "▌")
-
-    latency_ms = (time.perf_counter() - t0) * 1000
-    full_text = "".join(collected)
-    placeholder.markdown(full_text)
-    tokens = len(full_text.split()) * 4 // 3
-    return full_text, latency_ms, tokens
 
 
 def _call_vllm(prompt: str, adapter: str) -> tuple[str, float, int]:
