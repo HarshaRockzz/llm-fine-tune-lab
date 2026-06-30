@@ -82,15 +82,12 @@ for col, (val, delta, label, delay) in zip([c1, c2, c3, c4, c5], _CARDS):
 st.markdown("<hr class='glow-div'>", unsafe_allow_html=True)
 
 # ── Architecture + Tech stack ─────────────────────────────────────────────────
-col_arch, col_tech = st.columns([3, 2])
-
-with col_arch:
-    st.markdown(
-        "<div class='section-hdr'>⚙️ System Architecture</div>",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        """
+st.markdown(
+    "<div class='section-hdr'>⚙️ System Architecture</div>",
+    unsafe_allow_html=True,
+)
+st.markdown(
+    """
 <div style="display:flex;flex-direction:column;gap:14px;font-family:Inter,sans-serif;">
   <div style="display:grid;grid-template-columns:1fr 32px 1fr 32px 1fr;align-items:stretch;gap:0;">
     <div style="background:linear-gradient(145deg,rgba(99,102,241,0.14),rgba(99,102,241,0.04));border:1px solid rgba(99,102,241,0.40);border-radius:16px;padding:18px 20px;box-shadow:0 6px 24px rgba(99,102,241,0.12),inset 0 1px 0 rgba(255,255,255,0.05);">
@@ -159,27 +156,25 @@ with col_arch:
     </div>
   </div>
 </div>""",
-        unsafe_allow_html=True,
-    )
+    unsafe_allow_html=True,
+)
 
-with col_tech:
-    st.markdown(
-        "<div class='section-hdr'>🛠️ Tech Stack</div>",
-        unsafe_allow_html=True,
-    )
-    _TECH = [
-        ("🐍", "Python 3.11+", "Core language & tooling"),
-        ("🔥", "PyTorch 2.2", "Training framework"),
-        ("🤗", "PEFT + TRL", "LoRA / QLoRA adapters"),
-        ("⚡", "vLLM 0.4+", "2.4× inference speedup"),
-        ("🚀", "FastAPI", "Production API server"),
-        ("📊", "Weights &amp; Biases", "Experiment tracking"),
-        ("🗄️", "Qdrant Cloud", "Vector DB for RAG search"),
-        ("🧠", "Claude API", "LLM-as-judge scoring"),
-        ("🐳", "Docker + compose", "Containerization"),
-        ("📈", "Prometheus + Grafana", "Observability stack"),
-    ]
-    for icon, name, desc in _TECH:
+st.markdown("<div class='section-hdr'>🛠️ Tech Stack</div>", unsafe_allow_html=True)
+_TECH = [
+    ("🐍", "Python 3.11+", "Core language & tooling"),
+    ("🔥", "PyTorch 2.2", "Training framework"),
+    ("🤗", "PEFT + TRL", "LoRA / QLoRA adapters"),
+    ("⚡", "vLLM 0.4+", "2.4× inference speedup"),
+    ("🚀", "FastAPI", "Production API server"),
+    ("📊", "Weights &amp; Biases", "Experiment tracking"),
+    ("🗄️", "Qdrant Cloud", "Vector DB for RAG search"),
+    ("🧠", "Claude API", "LLM-as-judge scoring"),
+    ("🐳", "Docker + compose", "Containerization"),
+    ("📈", "Prometheus + Grafana", "Observability stack"),
+]
+_tc = st.columns(5)
+for i, (icon, name, desc) in enumerate(_TECH):
+    with _tc[i % 5]:
         st.markdown(
             f"""
 <div class="tech-item">
