@@ -254,6 +254,45 @@ if mode == "💬 Single Chat":
         unsafe_allow_html=True,
     )
 
+    if not st.session_state.messages:
+        st.markdown(
+            """
+<div style="text-align:center;padding:52px 20px 36px;max-width:700px;margin:0 auto;">
+  <div style="font-size:3.6rem;display:inline-block;animation:floatY 4s ease-in-out infinite;
+              margin-bottom:18px;filter:drop-shadow(0 0 18px rgba(99,102,241,0.5));">🤖</div>
+  <h2 style="color:#e2e8f0;font-size:1.45rem;font-weight:800;margin:0 0 10px;letter-spacing:-.3px;">
+    Chat with Fine-Tuned Adapters
+  </h2>
+  <p style="color:#475569;font-size:.88rem;line-height:1.75;margin:0 auto 28px;max-width:480px;">
+    Responses stream from <strong style="color:#a5b4fc;">OpenRouter free models</strong>,
+    each conditioned to simulate a different LoRA/QLoRA checkpoint —
+    from base Llama-3-8B&nbsp;(54% MMLU) to the champion run&nbsp;(71% MMLU).
+  </p>
+  <div style="color:#334155;font-size:.73rem;font-weight:700;text-transform:uppercase;
+              letter-spacing:1.5px;margin-bottom:12px;">Sample prompts to try</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:600px;margin:0 auto;text-align:left;">
+    <div style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.22);
+                border-radius:12px;padding:12px 15px;color:#a5b4fc;font-size:.82rem;line-height:1.55;
+                transition:all .2s ease;">
+      Explain LoRA vs QLoRA fine-tuning tradeoffs in detail
+    </div>
+    <div style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.22);
+                border-radius:12px;padding:12px 15px;color:#a5b4fc;font-size:.82rem;line-height:1.55;">
+      What makes vLLM 2.4x faster than HuggingFace generate()?
+    </div>
+    <div style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.22);
+                border-radius:12px;padding:12px 15px;color:#a5b4fc;font-size:.82rem;line-height:1.55;">
+      How does 4-bit NF4 quantization affect model quality?
+    </div>
+    <div style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.22);
+                border-radius:12px;padding:12px 15px;color:#a5b4fc;font-size:.82rem;line-height:1.55;">
+      What is MMLU and why does 71% accuracy matter here?
+    </div>
+  </div>
+</div>""",
+            unsafe_allow_html=True,
+        )
+
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
@@ -421,7 +460,7 @@ else:
                     st.error(str(e))
 
 # ── Adapter stats ──────────────────────────────────────────────────────────────
-with st.expander("📋 Adapter Performance Stats"):
+with st.expander("Adapter Performance Stats"):
     STATS = {
         "base": {
             "mmlu": "54.0%",

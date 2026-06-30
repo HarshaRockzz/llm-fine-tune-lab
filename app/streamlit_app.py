@@ -63,7 +63,7 @@ _CARDS = [
     ("58%", "↓ GPU Memory", "QLoRA vs Full-precision LoRA", "0.15s"),
     ("70%", "↓ Setup Time", "Config-driven pipeline", "0.25s"),
     ("20+", "↑ Experiments", "W&amp;B Bayesian sweep", "0.35s"),
-    ("54→71%", "+17pp accuracy", "MMLU domain accuracy", "0.45s"),
+    ("+17pp", "54% → 71% MMLU", "Domain accuracy gain", "0.45s"),
     ("2.4×", "↑ Throughput", "vLLM vs HF generate()", "0.55s"),
 ]
 
@@ -91,24 +91,116 @@ with col_arch:
     )
     st.markdown(
         """
-<div style="background:rgba(255,255,255,0.015);border:1px solid rgba(99,102,241,0.2);
-     border-radius:16px;padding:24px 22px;font-family:'JetBrains Mono','Fira Code',
-     'Courier New',monospace;font-size:.74rem;color:#64748b;line-height:2;overflow-x:auto;">
-<span style="color:#6366f1;font-weight:700;">╔══════════════════════════════════════════════════════════════╗</span>
-<span style="color:#6366f1;font-weight:700;">║</span>                  <span style="color:#a5b4fc;font-weight:800;">LLM Fine-Tune Lab</span>                           <span style="color:#6366f1;font-weight:700;">║</span>
-<span style="color:#6366f1;font-weight:700;">╠══════════════════╦════════════════════════╦═════════════════╣</span>
-<span style="color:#6366f1;font-weight:700;">║</span> <span style="color:#10b981;font-weight:600;">Training Pipeline</span> <span style="color:#6366f1;font-weight:700;">║</span> <span style="color:#10b981;font-weight:600;">Evaluation Harness    </span><span style="color:#6366f1;font-weight:700;">║</span> <span style="color:#10b981;font-weight:600;">Inference Server</span> <span style="color:#6366f1;font-weight:700;">║</span>
-<span style="color:#6366f1;font-weight:700;">║</span> LoRA / 4-bit     <span style="color:#6366f1;font-weight:700;">║</span> MMLU (57 subjects)    <span style="color:#6366f1;font-weight:700;">║</span> vLLM Continuous <span style="color:#6366f1;font-weight:700;">║</span>
-<span style="color:#6366f1;font-weight:700;">║</span> QLoRA NF4        <span style="color:#6366f1;font-weight:700;">║</span> TruthfulQA MC1/MC2   <span style="color:#6366f1;font-weight:700;">║</span> Batching        <span style="color:#6366f1;font-weight:700;">║</span>
-<span style="color:#6366f1;font-weight:700;">║</span> PEFT + TRL       <span style="color:#6366f1;font-weight:700;">║</span> Custom Domain Eval   <span style="color:#6366f1;font-weight:700;">║</span> LoRA Hot-swap   <span style="color:#6366f1;font-weight:700;">║</span>
-<span style="color:#6366f1;font-weight:700;">║</span> W&amp;B 20+ Sweeps  <span style="color:#6366f1;font-weight:700;">║</span> LLM-as-Judge (API)   <span style="color:#6366f1;font-weight:700;">║</span> FastAPI +       <span style="color:#6366f1;font-weight:700;">║</span>
-<span style="color:#6366f1;font-weight:700;">║</span> 50K samples      <span style="color:#6366f1;font-weight:700;">║</span> Checkpoint Tracking  <span style="color:#6366f1;font-weight:700;">║</span> Prometheus obs. <span style="color:#6366f1;font-weight:700;">║</span>
-<span style="color:#6366f1;font-weight:700;">╚══════════════════╩════════════════════════╩═════════════════╝</span>
-                              <span style="color:#334155;">▼</span>
-              <span style="color:#6366f1;font-weight:700;">╔═══════════════════════════════╗</span>
-              <span style="color:#6366f1;font-weight:700;">║</span>  <span style="color:#a5b4fc;font-weight:700;">Streamlit Dashboard</span> (this app)  <span style="color:#6366f1;font-weight:700;">║</span>
-              <span style="color:#6366f1;font-weight:700;">║</span>  Qdrant RAG · OpenRouter API   <span style="color:#6366f1;font-weight:700;">║</span>
-              <span style="color:#6366f1;font-weight:700;">╚═══════════════════════════════╝</span>
+<div style="display:flex;flex-direction:column;gap:14px;font-family:Inter,sans-serif;">
+
+  <div style="display:grid;grid-template-columns:1fr 32px 1fr 32px 1fr;align-items:stretch;gap:0;">
+
+    <div style="background:linear-gradient(145deg,rgba(99,102,241,0.14),rgba(99,102,241,0.04));
+                border:1px solid rgba(99,102,241,0.40);border-radius:16px;padding:18px 20px;
+                box-shadow:0 6px 24px rgba(99,102,241,0.12),inset 0 1px 0 rgba(255,255,255,0.05);">
+      <div style="color:#6366f1;font-size:.62rem;font-weight:800;text-transform:uppercase;
+                  letter-spacing:2px;margin-bottom:9px;display:flex;align-items:center;gap:7px;">
+        <span style="display:inline-block;width:7px;height:7px;background:#6366f1;border-radius:50%;
+                     box-shadow:0 0 8px rgba(99,102,241,0.7);flex-shrink:0;"></span>01 — Training
+      </div>
+      <div style="color:#e2e8f0;font-weight:800;font-size:.93rem;margin-bottom:12px;">PEFT + TRL Pipeline</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="color:#a5b4fc;font-size:.74rem;background:rgba(99,102,241,0.09);
+             border-left:2px solid rgba(99,102,241,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">LoRA / 4-bit QLoRA NF4</div>
+        <div style="color:#a5b4fc;font-size:.74rem;background:rgba(99,102,241,0.09);
+             border-left:2px solid rgba(99,102,241,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">W&amp;B Bayesian Sweeps</div>
+        <div style="color:#a5b4fc;font-size:.74rem;background:rgba(99,102,241,0.09);
+             border-left:2px solid rgba(99,102,241,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">50K domain samples</div>
+        <div style="color:#a5b4fc;font-size:.74rem;background:rgba(99,102,241,0.09);
+             border-left:2px solid rgba(99,102,241,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">Llama-3-8B &amp; Mistral-7B</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <span style="color:#6366f1;font-size:1.4rem;filter:drop-shadow(0 0 5px rgba(99,102,241,0.65));">&#10140;</span>
+    </div>
+
+    <div style="background:linear-gradient(145deg,rgba(16,185,129,0.12),rgba(16,185,129,0.03));
+                border:1px solid rgba(16,185,129,0.36);border-radius:16px;padding:18px 20px;
+                box-shadow:0 6px 24px rgba(16,185,129,0.10),inset 0 1px 0 rgba(255,255,255,0.05);">
+      <div style="color:#10b981;font-size:.62rem;font-weight:800;text-transform:uppercase;
+                  letter-spacing:2px;margin-bottom:9px;display:flex;align-items:center;gap:7px;">
+        <span style="display:inline-block;width:7px;height:7px;background:#10b981;border-radius:50%;
+                     box-shadow:0 0 8px rgba(16,185,129,0.7);flex-shrink:0;"></span>02 — Evaluation
+      </div>
+      <div style="color:#e2e8f0;font-weight:800;font-size:.93rem;margin-bottom:12px;">Multi-Harness Eval</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="color:#6ee7b7;font-size:.74rem;background:rgba(16,185,129,0.09);
+             border-left:2px solid rgba(16,185,129,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">MMLU — 57 subjects</div>
+        <div style="color:#6ee7b7;font-size:.74rem;background:rgba(16,185,129,0.09);
+             border-left:2px solid rgba(16,185,129,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">TruthfulQA MC1/MC2</div>
+        <div style="color:#6ee7b7;font-size:.74rem;background:rgba(16,185,129,0.09);
+             border-left:2px solid rgba(16,185,129,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">LLM-as-Judge (Claude)</div>
+        <div style="color:#6ee7b7;font-size:.74rem;background:rgba(16,185,129,0.09);
+             border-left:2px solid rgba(16,185,129,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">Custom domain tests</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <span style="color:#10b981;font-size:1.4rem;filter:drop-shadow(0 0 5px rgba(16,185,129,0.65));">&#10140;</span>
+    </div>
+
+    <div style="background:linear-gradient(145deg,rgba(139,92,246,0.12),rgba(139,92,246,0.03));
+                border:1px solid rgba(139,92,246,0.36);border-radius:16px;padding:18px 20px;
+                box-shadow:0 6px 24px rgba(139,92,246,0.10),inset 0 1px 0 rgba(255,255,255,0.05);">
+      <div style="color:#8b5cf6;font-size:.62rem;font-weight:800;text-transform:uppercase;
+                  letter-spacing:2px;margin-bottom:9px;display:flex;align-items:center;gap:7px;">
+        <span style="display:inline-block;width:7px;height:7px;background:#8b5cf6;border-radius:50%;
+                     box-shadow:0 0 8px rgba(139,92,246,0.7);flex-shrink:0;"></span>03 — Inference
+      </div>
+      <div style="color:#e2e8f0;font-weight:800;font-size:.93rem;margin-bottom:12px;">vLLM Serving</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="color:#c4b5fd;font-size:.74rem;background:rgba(139,92,246,0.09);
+             border-left:2px solid rgba(139,92,246,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">Continuous batching</div>
+        <div style="color:#c4b5fd;font-size:.74rem;background:rgba(139,92,246,0.09);
+             border-left:2px solid rgba(139,92,246,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">LoRA adapter hot-swap</div>
+        <div style="color:#c4b5fd;font-size:.74rem;background:rgba(139,92,246,0.09);
+             border-left:2px solid rgba(139,92,246,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">FastAPI + Prometheus</div>
+        <div style="color:#c4b5fd;font-size:.74rem;background:rgba(139,92,246,0.09);
+             border-left:2px solid rgba(139,92,246,0.45);border-radius:0 5px 5px 0;padding:3px 8px;">2.4&#215; HF throughput</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:center;align-items:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:2px;height:16px;background:linear-gradient(180deg,rgba(139,92,246,0.6),rgba(245,158,11,0.6));"></div>
+      <span style="color:#f59e0b;font-size:1rem;line-height:1;filter:drop-shadow(0 0 5px rgba(245,158,11,0.6));">&#9660;</span>
+    </div>
+  </div>
+
+  <div style="background:linear-gradient(145deg,rgba(245,158,11,0.10),rgba(245,158,11,0.03));
+              border:1px solid rgba(245,158,11,0.32);border-radius:16px;padding:16px 22px;
+              display:flex;flex-wrap:wrap;align-items:center;gap:16px;
+              box-shadow:0 6px 24px rgba(245,158,11,0.07),inset 0 1px 0 rgba(255,255,255,0.04);">
+    <div style="flex-shrink:0;">
+      <div style="color:#f59e0b;font-size:.62rem;font-weight:800;text-transform:uppercase;
+                  letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;gap:7px;">
+        <span style="display:inline-block;width:7px;height:7px;background:#f59e0b;border-radius:50%;
+                     box-shadow:0 0 8px rgba(245,158,11,0.7);flex-shrink:0;"></span>04 — Dashboard
+      </div>
+      <div style="color:#e2e8f0;font-weight:800;font-size:.93rem;">Streamlit App</div>
+    </div>
+    <div style="width:1px;height:38px;background:rgba(245,158,11,0.20);flex-shrink:0;"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;flex:1;">
+      <span style="background:rgba(245,158,11,0.09);border:1px solid rgba(245,158,11,0.24);
+                   border-radius:20px;padding:4px 12px;font-size:.74rem;color:#fcd34d;">Qdrant Vector RAG</span>
+      <span style="background:rgba(99,102,241,0.09);border:1px solid rgba(99,102,241,0.24);
+                   border-radius:20px;padding:4px 12px;font-size:.74rem;color:#a5b4fc;">OpenRouter API</span>
+      <span style="background:rgba(16,185,129,0.09);border:1px solid rgba(16,185,129,0.24);
+                   border-radius:20px;padding:4px 12px;font-size:.74rem;color:#6ee7b7;">Real-time Analytics</span>
+      <span style="background:rgba(139,92,246,0.09);border:1px solid rgba(139,92,246,0.24);
+                   border-radius:20px;padding:4px 12px;font-size:.74rem;color:#c4b5fd;">5 Interactive Pages</span>
+      <span style="background:rgba(244,63,94,0.09);border:1px solid rgba(244,63,94,0.24);
+                   border-radius:20px;padding:4px 12px;font-size:.74rem;color:#fda4af;">GitHub CI/CD</span>
+    </div>
+  </div>
+
 </div>""",
         unsafe_allow_html=True,
     )
